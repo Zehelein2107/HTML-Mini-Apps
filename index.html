@@ -155,6 +155,18 @@
       border: 1px solid #fecaca;
     }
 
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .metrics-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -457,8 +469,11 @@
           ob deine Planung über, unter oder exakt im Ziel liegt. Alle Daten bleiben lokal in diesem Browser.
         </p>
         <div class="action-row">
+          <button class="button button-secondary" id="exportButton" type="button">⇩ JSON exportieren</button>
+          <button class="button button-secondary" id="importButton" type="button">⇧ JSON importieren</button>
           <a class="button button-donate" href="https://www.paypal.com/donate/?hosted_button_id=YC3JVKB9YAW4U" target="_blank" rel="noopener noreferrer" aria-label="Über PayPal spenden">♡ Per PayPal spenden</a>
           <button class="button button-secondary" id="resetButton" type="button">↺ Planung zurücksetzen</button>
+          <input class="visually-hidden" id="importFileInput" type="file" accept="application/json,.json" aria-label="JSON-Planung importieren" />
         </div>
       </div>
 
@@ -552,6 +567,9 @@
       yearRemaining: document.querySelector("#yearRemaining"),
       yearStatusText: document.querySelector("#yearStatusText"),
       saveStatus: document.querySelector("#saveStatus"),
+      exportButton: document.querySelector("#exportButton"),
+      importButton: document.querySelector("#importButton"),
+      importFileInput: document.querySelector("#importFileInput"),
       resetButton: document.querySelector("#resetButton"),
       toast: document.querySelector("#toast")
     };
@@ -813,6 +831,55 @@
       }[character]));
     }
 
+    function exportPlannerState() {
+      const exportData = {
+        ...state,
+        exportedAt: new Date().toISOString(),
+        app: "Marketing Budget Planner"
+      };
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.createElement("a");
+      const dateStamp = new Date().toISOString().slice(0, 10);
+
+      downloadLink.href = url;
+      downloadLink.download = `marketing-budget-plan-${dateStamp}.json`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+      URL.revokeObjectURL(url);
+      showToast("JSON-Export wurde vorbereitet.");
+    }
+
+    function importPlannerState(file) {
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        try {
+          const parsedData = JSON.parse(reader.result);
+          const importedState = parsedData.data || parsedData;
+
+          if (!importedState?.monthlyBudgets || !Array.isArray(importedState.channels)) {
+            throw new Error("Ungültige Struktur");
+          }
+
+          if (!confirm("Soll die aktuelle Planung durch die importierte JSON-Datei ersetzt werden?")) return;
+
+          state = normalizeState(importedState);
+          render();
+          showToast("JSON-Planung wurde importiert.");
+        } catch (error) {
+          console.warn("Import fehlgeschlagen", error);
+          showToast("Die JSON-Datei konnte nicht importiert werden.");
+        } finally {
+          elements.importFileInput.value = "";
+        }
+      });
+      reader.readAsText(file);
+    }
+
     function showToast(message) {
       elements.toast.textContent = message;
       elements.toast.classList.add("visible");
@@ -825,6 +892,14 @@
       addChannel(elements.channelInput.value);
       elements.channelInput.value = "";
       elements.channelInput.focus();
+    });
+
+    elements.exportButton.addEventListener("click", exportPlannerState);
+
+    elements.importButton.addEventListener("click", () => elements.importFileInput.click());
+
+    elements.importFileInput.addEventListener("change", (event) => {
+      importPlannerState(event.target.files?.[0]);
     });
 
     elements.resetButton.addEventListener("click", () => {
