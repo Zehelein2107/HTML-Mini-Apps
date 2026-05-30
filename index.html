@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketing Budget Planner</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-strong: #f8fafc;
+      --text: #172033;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --primary-soft: #eef2ff;
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --yellow: #ca8a04;
+      --yellow-soft: #fef9c3;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+      --radius: 22px;
+      --transition: 180ms ease;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.13), transparent 34rem),
+        linear-gradient(180deg, #fbfcff 0%, var(--bg) 42%, #eef3fb 100%);
+      color: var(--text);
+    }
+
+    button, input { font: inherit; }
+
+    .app-shell {
+      width: min(1500px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 44px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .hero-card, .metric-card, .planner-card, .channel-manager {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .hero-card {
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -70px -90px auto;
+      width: 230px;
+      height: 230px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(14, 165, 233, 0.18));
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--primary-dark);
+      background: var(--primary-soft);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.02;
+      letter-spacing: -0.06em;
+    }
+
+    .hero-card p {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.65;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
+    }
+
+    .button:hover { transform: translateY(-1px); }
+    .button:active { transform: translateY(0); }
+
+    .button-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), #2563eb);
+      box-shadow: 0 12px 24px rgba(79, 70, 229, 0.24);
+    }
+
+    .button-secondary {
+      color: var(--text);
+      background: #f1f5f9;
+      border: 1px solid var(--line);
+    }
+
+    .button-danger {
+      color: var(--red);
+      background: var(--red-soft);
+      border: 1px solid #fecaca;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .metric-card {
+      padding: 22px;
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .metric-value {
+      margin-top: 8px;
+      font-size: clamp(1.55rem, 3vw, 2.25rem);
+      letter-spacing: -0.04em;
+      font-weight: 900;
+    }
+
+    .metric-hint { margin-top: 6px; color: var(--muted); font-size: 0.9rem; }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .planner-card { overflow: hidden; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(248, 250, 252, 0.72);
+    }
+
+    .section-header h2, .channel-manager h2 {
+      margin: 0;
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+    }
+
+    .save-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--green);
+      font-weight: 800;
+      font-size: 0.88rem;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity var(--transition), transform var(--transition);
+    }
+
+    .save-status.visible { opacity: 1; transform: translateY(0); }
+
+    .table-wrap {
+      max-height: 72vh;
+      overflow: auto;
+      position: relative;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      min-width: 1180px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      padding: 12px;
+      text-align: right;
+      background: var(--surface);
+    }
+
+    th:first-child, td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      text-align: left;
+      min-width: 190px;
+      box-shadow: 8px 0 18px rgba(15, 23, 42, 0.04);
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 0.83rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    thead th:first-child { z-index: 7; }
+
+    tbody tr { animation: rowIn 220ms ease both; }
+    tbody tr:hover td { background: #fbfdff; }
+
+    tfoot td, tfoot th {
+      position: sticky;
+      bottom: 0;
+      z-index: 4;
+      background: #f8fafc;
+      font-weight: 900;
+    }
+
+    tfoot th:first-child { z-index: 6; }
+
+    .number-input {
+      width: 112px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 11px;
+      color: var(--text);
+      background: #fff;
+      text-align: right;
+      outline: 0;
+      transition: border var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+
+    .number-input:hover { border-color: #cbd5e1; }
+    .number-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12); }
+    .number-input.invalid { border-color: var(--red); background: #fff7f7; }
+
+    .channel-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .channel-name {
+      min-width: 0;
+      font-weight: 850;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .channel-share {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      background: #f1f5f9;
+      border-radius: 999px;
+      padding: 5px 8px;
+      flex: none;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 104px;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 0.82rem;
+      font-weight: 900;
+    }
+
+    .status-ok { color: var(--green); background: var(--green-soft); }
+    .status-under { color: var(--yellow); background: var(--yellow-soft); }
+    .status-over { color: var(--red); background: var(--red-soft); }
+    .money-positive { color: var(--green); }
+    .money-negative { color: var(--red); }
+    .muted { color: var(--muted); }
+
+    .channel-manager {
+      padding: 20px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .manager-copy {
+      margin: 8px 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.94rem;
+    }
+
+    .channel-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .text-input {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 13px;
+      outline: 0;
+      transition: border var(--transition), box-shadow var(--transition);
+    }
+
+    .text-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12); }
+
+    .channel-list {
+      display: grid;
+      gap: 10px;
+      max-height: 44vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .channel-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      transition: transform var(--transition), box-shadow var(--transition), border var(--transition);
+    }
+
+    .channel-item:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07); border-color: #cbd5e1; }
+
+    .icon-actions { display: inline-flex; gap: 6px; }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), color var(--transition);
+    }
+
+    .icon-button:hover { transform: translateY(-1px); background: var(--primary-soft); color: var(--primary-dark); }
+    .icon-button.delete:hover { background: var(--red-soft); color: var(--red); }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      color: #fff;
+      background: #0f172a;
+      border-radius: 16px;
+      padding: 13px 16px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.24);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity var(--transition), transform var(--transition);
+      z-index: 20;
+    }
+
+    .toast.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1100px) {
+      .hero, .content-grid { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .channel-manager { position: static; }
+    }
+
+    @media (max-width: 720px) {
+      .app-shell { width: min(100% - 20px, 1500px); padding-top: 18px; }
+      .hero-card, .metric-card, .channel-manager { padding: 18px; }
+      .metrics-grid { grid-template-columns: 1fr; }
+      .section-header { align-items: flex-start; flex-direction: column; }
+      .channel-form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-card">
+        <span class="eyebrow">📊 Interner Marketing Budget Planner</span>
+        <h1 id="page-title">Jahresbudget für alle Channels sauber planen.</h1>
+        <p>
+          Lege Monatsbudgets fest, verteile sie auf beliebig viele Marketing-Channels und sieh sofort,
+          ob deine Planung über, unter oder exakt im Ziel liegt. Alle Daten bleiben lokal in diesem Browser.
+        </p>
+        <div class="action-row">
+          <button class="button button-primary" id="addDemoChannelButton" type="button">＋ Beispiel-Channel ergänzen</button>
+          <button class="button button-secondary" id="resetButton" type="button">↺ Planung zurücksetzen</button>
+        </div>
+      </div>
+
+      <div class="metrics-grid" aria-label="Jahreskennzahlen">
+        <article class="metric-card">
+          <span class="metric-label">Jahresbudget</span>
+          <strong class="metric-value" id="yearBudget">0 €</strong>
+          <span class="metric-hint">Summe der 12 Monatsbudgets</span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Geplante Ausgaben</span>
+          <strong class="metric-value" id="yearSpend">0 €</strong>
+          <span class="metric-hint">Summe aller Channel-Budgets</span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Jahres-Restbudget</span>
+          <strong class="metric-value" id="yearRemaining">0 €</strong>
+          <span class="metric-hint" id="yearStatusText">Bereit zur Planung</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <div class="planner-card">
+        <div class="section-header">
+          <div>
+            <h2>Monatsplanung</h2>
+            <span class="muted">Sticky Monats-Header, Live-Summen und automatische Abweichungen.</span>
+          </div>
+          <span class="save-status" id="saveStatus">● Lokal gespeichert</span>
+        </div>
+        <div class="table-wrap" role="region" aria-label="Budget-Tabelle" tabindex="0">
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+            <tfoot id="tableFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <aside class="channel-manager" aria-labelledby="channel-title">
+        <h2 id="channel-title">Channels verwalten</h2>
+        <p class="manager-copy">
+          Füge Channels hinzu, benenne sie um oder lösche sie. Die prozentuale Verteilung wird automatisch aus dem Jahresvolumen berechnet.
+        </p>
+        <form class="channel-form" id="channelForm">
+          <input class="text-input" id="channelNameInput" maxlength="40" placeholder="z. B. TikTok Ads" autocomplete="off" required />
+          <button class="button button-primary" type="submit">Hinzufügen</button>
+        </form>
+        <div class="channel-list" id="channelList" aria-live="polite"></div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Marketing Budget Planner: bewusst ohne externe Abhängigkeiten, damit die App komplett offline läuft.
+    const STORAGE_KEY = "marketing-budget-planner-v1";
+    const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+
+    const defaultState = {
+      monthlyBudgets: [18000, 18000, 22000, 24000, 26000, 28000, 30000, 30000, 32000, 34000, 38000, 42000],
+      channels: [
+        { id: crypto.randomUUID(), name: "Google Ads", budgets: [6500, 6500, 7600, 7800, 8200, 9000, 9800, 10000, 10500, 10800, 12000, 13500] },
+        { id: crypto.randomUUID(), name: "Meta Ads", budgets: [4200, 4200, 5100, 5600, 6200, 6700, 7200, 7000, 7600, 8200, 9000, 9600] },
+        { id: crypto.randomUUID(), name: "LinkedIn", budgets: [2800, 2600, 3200, 3600, 3800, 4200, 4700, 4500, 5200, 5600, 6500, 7200] },
+        { id: crypto.randomUUID(), name: "SEO & Content", budgets: [3000, 3300, 3600, 3900, 4200, 4500, 4600, 4800, 5000, 5200, 5400, 5800] },
+        { id: crypto.randomUUID(), name: "Influencer", budgets: [1200, 1400, 1900, 2600, 3100, 3600, 3900, 4100, 4200, 4600, 5200, 6200] }
+      ]
+    };
+
+    let state = loadState();
+    let saveTimer;
+    let toastTimer;
+
+    const elements = {
+      tableHead: document.querySelector("#tableHead"),
+      tableBody: document.querySelector("#tableBody"),
+      tableFoot: document.querySelector("#tableFoot"),
+      channelForm: document.querySelector("#channelForm"),
+      channelInput: document.querySelector("#channelNameInput"),
+      channelList: document.querySelector("#channelList"),
+      yearBudget: document.querySelector("#yearBudget"),
+      yearSpend: document.querySelector("#yearSpend"),
+      yearRemaining: document.querySelector("#yearRemaining"),
+      yearStatusText: document.querySelector("#yearStatusText"),
+      saveStatus: document.querySelector("#saveStatus"),
+      resetButton: document.querySelector("#resetButton"),
+      addDemoChannelButton: document.querySelector("#addDemoChannelButton"),
+      toast: document.querySelector("#toast")
+    };
+
+    function loadState() {
+      try {
+        const savedState = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (savedState?.monthlyBudgets?.length === 12 && Array.isArray(savedState.channels)) {
+          return normalizeState(savedState);
+        }
+      } catch (error) {
+        console.warn("Gespeicherte Daten konnten nicht gelesen werden.", error);
+      }
+      return structuredClone(defaultState);
+    }
+
+    function normalizeState(rawState) {
+      return {
+        monthlyBudgets: months.map((_, index) => toNumber(rawState.monthlyBudgets[index])),
+        channels: rawState.channels.map((channel) => ({
+          id: channel.id || crypto.randomUUID(),
+          name: String(channel.name || "Unbenannter Channel").slice(0, 40),
+          budgets: months.map((_, index) => toNumber(channel.budgets?.[index]))
+        }))
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      elements.saveStatus.classList.add("visible");
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => elements.saveStatus.classList.remove("visible"), 1400);
+    }
+
+    function render() {
+      renderTable();
+      renderChannels();
+      renderMetrics();
+      saveState();
+    }
+
+    function renderTable(includeBody = true) {
+      if (includeBody) {
+        elements.tableHead.innerHTML = `
+        <tr>
+          <th scope="col">Bereich</th>
+          ${months.map((month) => `<th scope="col">${month}</th>`).join("")}
+          <th scope="col">Jahr</th>
+        </tr>`;
+
+      }
+
+      if (includeBody) {
+        const budgetRow = `
+        <tr>
+          <th scope="row">Monatsbudget</th>
+          ${state.monthlyBudgets.map((budget, monthIndex) => `
+            <td><input class="number-input" data-type="monthlyBudget" data-month="${monthIndex}" type="number" min="0" step="100" value="${budget}" aria-label="Monatsbudget ${months[monthIndex]}"></td>
+          `).join("")}
+          <td data-summary="yearBudgetTotal">${formatCurrency(sum(state.monthlyBudgets))}</td>
+        </tr>`;
+
+      const channelRows = state.channels.map((channel) => `
+        <tr>
+          <th scope="row">
+            <div class="channel-cell">
+              <span class="channel-name">${escapeHtml(channel.name)}</span>
+              <span class="channel-share">${formatPercent(getChannelShare(channel))}</span>
+            </div>
+          </th>
+          ${channel.budgets.map((budget, monthIndex) => `
+            <td><input class="number-input" data-type="channelBudget" data-channel="${channel.id}" data-month="${monthIndex}" type="number" min="0" step="100" value="${budget}" aria-label="${escapeHtml(channel.name)} Budget ${months[monthIndex]}"></td>
+          `).join("")}
+          <td data-summary="channelTotal" data-channel-total="${channel.id}">${formatCurrency(sum(channel.budgets))}</td>
+        </tr>
+      `).join("");
+
+      elements.tableBody.innerHTML = budgetRow + channelRows;
+      bindBudgetInputs();
+      } else {
+        updateInlineTableSummaries();
+      }
+
+      const monthSpends = getMonthlySpends();
+      const remaining = state.monthlyBudgets.map((budget, index) => budget - monthSpends[index]);
+      const totalSpend = sum(monthSpends);
+
+      elements.tableFoot.innerHTML = `
+        <tr>
+          <th scope="row">Ausgaben</th>
+          ${monthSpends.map((value) => `<td>${formatCurrency(value)}</td>`).join("")}
+          <td>${formatCurrency(totalSpend)}</td>
+        </tr>
+        <tr>
+          <th scope="row">Rest / Abweichung</th>
+          ${remaining.map((value) => `<td class="${value < 0 ? "money-negative" : value > 0 ? "money-positive" : ""}">${formatCurrency(value)}</td>`).join("")}
+          <td class="${sum(remaining) < 0 ? "money-negative" : sum(remaining) > 0 ? "money-positive" : ""}">${formatCurrency(sum(remaining))}</td>
+        </tr>
+        <tr>
+          <th scope="row">Status</th>
+          ${remaining.map((value) => `<td>${getStatusPill(value)}</td>`).join("")}
+          <td>${getStatusPill(sum(remaining))}</td>
+        </tr>`;
+
+    }
+
+    function updateInlineTableSummaries() {
+      const yearBudgetCell = elements.tableBody.querySelector("[data-summary='yearBudgetTotal']");
+      if (yearBudgetCell) yearBudgetCell.textContent = formatCurrency(sum(state.monthlyBudgets));
+
+      elements.tableBody.querySelectorAll(".channel-share").forEach((share, index) => {
+        const channel = state.channels[index];
+        if (channel) share.textContent = formatPercent(getChannelShare(channel));
+      });
+
+      elements.tableBody.querySelectorAll("[data-channel-total]").forEach((cell) => {
+        const channel = getChannel(cell.dataset.channelTotal);
+        if (channel) cell.textContent = formatCurrency(sum(channel.budgets));
+      });
+    }
+
+    function renderChannels() {
+      if (!state.channels.length) {
+        elements.channelList.innerHTML = `<p class="muted">Noch keine Channels vorhanden. Lege den ersten Channel an.</p>`;
+        return;
+      }
+
+      elements.channelList.innerHTML = state.channels.map((channel) => `
+        <div class="channel-item">
+          <input class="text-input" data-type="channelName" data-channel="${channel.id}" maxlength="40" value="${escapeHtml(channel.name)}" aria-label="Channel ${escapeHtml(channel.name)} bearbeiten">
+          <div class="icon-actions">
+            <button class="icon-button" data-action="duplicate" data-channel="${channel.id}" type="button" title="Channel duplizieren">⧉</button>
+            <button class="icon-button delete" data-action="delete" data-channel="${channel.id}" type="button" title="Channel löschen">×</button>
+          </div>
+        </div>
+      `).join("");
+
+      elements.channelList.querySelectorAll("[data-type='channelName']").forEach((input) => {
+        input.addEventListener("input", (event) => {
+          const channel = getChannel(event.target.dataset.channel);
+          channel.name = event.target.value.trim() || "Unbenannter Channel";
+          saveState();
+          renderTable();
+        });
+      });
+
+      elements.channelList.querySelectorAll("[data-action]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const channel = getChannel(button.dataset.channel);
+          if (button.dataset.action === "delete") deleteChannel(channel.id);
+          if (button.dataset.action === "duplicate") duplicateChannel(channel);
+        });
+      });
+    }
+
+    function renderMetrics() {
+      const yearBudget = sum(state.monthlyBudgets);
+      const yearSpend = sum(getMonthlySpends());
+      const yearRemaining = yearBudget - yearSpend;
+
+      elements.yearBudget.textContent = formatCurrency(yearBudget);
+      elements.yearSpend.textContent = formatCurrency(yearSpend);
+      elements.yearRemaining.textContent = formatCurrency(yearRemaining);
+      elements.yearRemaining.className = `metric-value ${yearRemaining < 0 ? "money-negative" : yearRemaining > 0 ? "money-positive" : ""}`;
+      elements.yearStatusText.textContent = yearRemaining === 0
+        ? "Alle Monatsbudgets sind exakt verteilt."
+        : yearRemaining > 0
+          ? "Noch nicht vollständig verteilt."
+          : "Mehr Ausgaben als Budget geplant.";
+    }
+
+    function bindBudgetInputs() {
+      elements.tableBody.querySelectorAll(".number-input").forEach((input) => {
+        input.addEventListener("input", (event) => {
+          const value = Math.max(0, toNumber(event.target.value));
+          event.target.classList.toggle("invalid", Number(event.target.value) < 0);
+
+          if (event.target.dataset.type === "monthlyBudget") {
+            state.monthlyBudgets[Number(event.target.dataset.month)] = value;
+          } else {
+            const channel = getChannel(event.target.dataset.channel);
+            channel.budgets[Number(event.target.dataset.month)] = value;
+          }
+
+          renderTable(false);
+          renderMetrics();
+          saveState();
+        });
+      });
+    }
+
+    function addChannel(name, budgets = Array(12).fill(0)) {
+      const cleanName = name.trim();
+      if (!cleanName) {
+        showToast("Bitte gib einen Channel-Namen ein.");
+        return;
+      }
+      state.channels.push({ id: crypto.randomUUID(), name: cleanName.slice(0, 40), budgets: months.map((_, index) => toNumber(budgets[index])) });
+      render();
+      showToast(`Channel „${cleanName}“ wurde hinzugefügt.`);
+    }
+
+    function deleteChannel(channelId) {
+      const channel = getChannel(channelId);
+      const confirmed = confirm(`Channel „${channel.name}“ wirklich löschen?`);
+      if (!confirmed) return;
+      state.channels = state.channels.filter((item) => item.id !== channelId);
+      render();
+      showToast("Channel wurde gelöscht.");
+    }
+
+    function duplicateChannel(channel) {
+      addChannel(`${channel.name} Kopie`, channel.budgets);
+    }
+
+    function getChannel(channelId) {
+      return state.channels.find((channel) => channel.id === channelId);
+    }
+
+    function getMonthlySpends() {
+      return months.map((_, monthIndex) => sum(state.channels.map((channel) => channel.budgets[monthIndex])));
+    }
+
+    function getChannelShare(channel) {
+      const totalSpend = sum(getMonthlySpends());
+      return totalSpend === 0 ? 0 : sum(channel.budgets) / totalSpend;
+    }
+
+    function getStatusPill(remaining) {
+      if (remaining === 0) return `<span class="status-pill status-ok">✓ Passt</span>`;
+      if (remaining > 0) return `<span class="status-pill status-under">△ Zu wenig</span>`;
+      return `<span class="status-pill status-over">! Zu viel</span>`;
+    }
+
+    function sum(values) {
+      return values.reduce((total, value) => total + toNumber(value), 0);
+    }
+
+    function toNumber(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
+    }
+
+    function formatPercent(value) {
+      return new Intl.NumberFormat("de-DE", { style: "percent", maximumFractionDigits: 1 }).format(value);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+      }[character]));
+    }
+
+    function showToast(message) {
+      elements.toast.textContent = message;
+      elements.toast.classList.add("visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => elements.toast.classList.remove("visible"), 2200);
+    }
+
+    elements.channelForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      addChannel(elements.channelInput.value);
+      elements.channelInput.value = "";
+      elements.channelInput.focus();
+    });
+
+    elements.resetButton.addEventListener("click", () => {
+      if (!confirm("Soll die gesamte Planung auf Beispiel-Daten zurückgesetzt werden?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = structuredClone(defaultState);
+      render();
+      showToast("Planung wurde zurückgesetzt.");
+    });
+
+    elements.addDemoChannelButton.addEventListener("click", () => {
+      const suggestions = ["TikTok Ads", "Podcast Sponsoring", "Events", "Affiliate", "PR Kampagnen"];
+      const existingNames = state.channels.map((channel) => channel.name);
+      const suggestion = suggestions.find((name) => !existingNames.includes(name)) || `Neuer Channel ${state.channels.length + 1}`;
+      addChannel(suggestion, Array.from({ length: 12 }, (_, index) => (index + 1) * 250));
+    });
+
+    render();
+  </script>
+</body>
+</html>
