@@ -457,7 +457,6 @@
           ob deine Planung über, unter oder exakt im Ziel liegt. Alle Daten bleiben lokal in diesem Browser.
         </p>
         <div class="action-row">
-          <button class="button button-primary" id="addDemoChannelButton" type="button">＋ Beispiel-Channel ergänzen</button>
           <a class="button button-donate" href="https://www.paypal.com/donate/?hosted_button_id=YC3JVKB9YAW4U" target="_blank" rel="noopener noreferrer" aria-label="Über PayPal spenden">♡ Per PayPal spenden</a>
           <button class="button button-secondary" id="resetButton" type="button">↺ Planung zurücksetzen</button>
         </div>
@@ -521,6 +520,11 @@
     const STORAGE_KEY = "marketing-budget-planner-v1";
     const months = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
 
+    const emptyState = {
+      monthlyBudgets: Array(12).fill(0),
+      channels: []
+    };
+
     const defaultState = {
       monthlyBudgets: [18000, 18000, 22000, 24000, 26000, 28000, 30000, 30000, 32000, 34000, 38000, 42000],
       channels: [
@@ -549,7 +553,6 @@
       yearStatusText: document.querySelector("#yearStatusText"),
       saveStatus: document.querySelector("#saveStatus"),
       resetButton: document.querySelector("#resetButton"),
-      addDemoChannelButton: document.querySelector("#addDemoChannelButton"),
       toast: document.querySelector("#toast")
     };
 
@@ -825,18 +828,10 @@
     });
 
     elements.resetButton.addEventListener("click", () => {
-      if (!confirm("Soll die gesamte Planung auf Beispiel-Daten zurückgesetzt werden?")) return;
-      localStorage.removeItem(STORAGE_KEY);
-      state = structuredClone(defaultState);
+      if (!confirm("Soll die gesamte Planung wirklich geleert werden? Alle Channels und Monatsbudgets werden entfernt.")) return;
+      state = structuredClone(emptyState);
       render();
-      showToast("Planung wurde zurückgesetzt.");
-    });
-
-    elements.addDemoChannelButton.addEventListener("click", () => {
-      const suggestions = ["TikTok Ads", "Podcast Sponsoring", "Events", "Affiliate", "PR Kampagnen"];
-      const existingNames = state.channels.map((channel) => channel.name);
-      const suggestion = suggestions.find((name) => !existingNames.includes(name)) || `Neuer Channel ${state.channels.length + 1}`;
-      addChannel(suggestion, Array.from({ length: 12 }, (_, index) => (index + 1) * 250));
+      showToast("Planung wurde vollständig geleert.");
     });
 
     render();
