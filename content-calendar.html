@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Calendar Studio</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #f1f4f8;
+      --surface-3: #e7ebf1;
+      --text: #121826;
+      --muted: #667085;
+      --faint: #98a2b3;
+      --line: #d9dee7;
+      --primary: #2563eb;
+      --primary-2: #0f766e;
+      --primary-soft: #e9f1ff;
+      --green: #16803c;
+      --green-soft: #e8f7ee;
+      --amber: #b75d00;
+      --amber-soft: #fff3df;
+      --red: #c83232;
+      --red-soft: #fff0f0;
+      --shadow: 0 18px 45px rgba(16, 24, 40, 0.08);
+      --radius: 8px;
+      --speed: 180ms ease;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #111318;
+      --surface: #181b22;
+      --surface-2: #20242d;
+      --surface-3: #2a303b;
+      --text: #f4f7fb;
+      --muted: #aab4c3;
+      --faint: #7e8898;
+      --line: #313744;
+      --primary: #6aa2ff;
+      --primary-2: #6fd2c8;
+      --primary-soft: #1f2f4d;
+      --green: #70d899;
+      --green-soft: #163323;
+      --amber: #ffbd68;
+      --amber-soft: #382718;
+      --red: #ff8b8b;
+      --red-soft: #3b2023;
+      --shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; border: 0; }
+    a { color: inherit; text-decoration: none; }
+
+    .app {
+      width: min(1560px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 16px 0 42px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 13px 0;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #0f766e);
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.08rem;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-actions,
+    .toolbar,
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .top-actions { justify-content: flex-end; }
+    .toolbar { justify-content: space-between; margin-bottom: 12px; }
+    .row-actions { justify-content: flex-end; }
+
+    .button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      transition: transform var(--speed), border-color var(--speed), background var(--speed), color var(--speed);
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--primary) 45%, var(--line));
+    }
+
+    .button.primary {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    [data-theme="dark"] .button.primary { color: #07111f; }
+
+    .button.danger {
+      color: var(--red);
+      background: var(--red-soft);
+      border-color: color-mix(in srgb, var(--red) 25%, var(--line));
+    }
+
+    .button.donate {
+      color: #ffffff;
+      background: #0070ba;
+      border-color: #0070ba;
+    }
+
+    .button.donate:hover {
+      background: #005ea6;
+      border-color: #005ea6;
+    }
+
+    .button.icon {
+      width: 38px;
+      padding: 0;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin: 4px 0 16px;
+    }
+
+    .metric,
+    .panel,
+    .calendar-day,
+    .post-card,
+    .campaign-card,
+    .idea-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 26px rgba(16, 24, 40, 0.04);
+    }
+
+    .metric {
+      min-height: 86px;
+      padding: 13px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 1.45rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+    }
+
+    .panel-header h2,
+    .panel-header h3 {
+      margin: 0;
+      font-size: 0.98rem;
+    }
+
+    .panel-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .panel-body { padding: 16px; }
+
+    .filters {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+      transition: border-color var(--speed), box-shadow var(--speed), background var(--speed);
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      overflow-x: auto;
+    }
+
+    .tab {
+      min-height: 34px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: var(--text);
+      background: var(--surface);
+      box-shadow: 0 6px 16px rgba(16, 24, 40, 0.08);
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .calendar-head {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .calendar-head div {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .calendar-day {
+      min-height: 146px;
+      padding: 9px;
+      overflow: hidden;
+      transition: border-color var(--speed), background var(--speed), transform var(--speed);
+    }
+
+    .calendar-day.is-today {
+      position: relative;
+      border-color: var(--primary);
+      background: linear-gradient(180deg, var(--primary-soft), var(--surface));
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 22%, transparent), var(--shadow);
+    }
+
+    .calendar-day.is-today .day-number {
+      min-width: 30px;
+      min-height: 30px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #ffffff;
+      background: var(--primary);
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 30%, transparent);
+    }
+
+    [data-theme="dark"] .calendar-day.is-today .day-number {
+      color: #07111f;
+    }
+
+    .today-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 4px 7px;
+      border-radius: 7px;
+      color: var(--primary);
+      background: var(--surface);
+      border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line));
+      font-size: 0.7rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .calendar-day.drag-over {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      transform: translateY(-1px);
+    }
+
+    .day-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .day-number {
+      font-weight: 900;
+      font-size: 0.86rem;
+    }
+
+    .day-muted { opacity: 0.45; }
+
+    .day-count {
+      min-width: 22px;
+      min-height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 7px;
+      color: var(--muted);
+      background: var(--surface-2);
+      font-size: 0.74rem;
+      font-weight: 900;
+    }
+
+    .day-posts {
+      display: grid;
+      gap: 6px;
+    }
+
+    .mini-post {
+      display: grid;
+      gap: 3px;
+      padding: 7px;
+      border-radius: 7px;
+      border-left: 4px solid var(--platform-color, var(--primary));
+      background: var(--surface-2);
+      cursor: grab;
+      transition: transform var(--speed), background var(--speed);
+    }
+
+    .mini-post:hover { transform: translateY(-1px); }
+    .mini-post:active { cursor: grabbing; }
+
+    .mini-post strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.78rem;
+    }
+
+    .mini-post span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(160px, 1fr));
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .list-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+    }
+
+    .list-table th {
+      color: var(--muted);
+      font-size: 0.76rem;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0 10px;
+    }
+
+    .list-table td {
+      padding: 11px 10px;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    .list-table td:first-child {
+      border-left: 1px solid var(--line);
+      border-radius: 8px 0 0 8px;
+    }
+
+    .list-table td:last-child {
+      border-right: 1px solid var(--line);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(210px, 1fr));
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .kanban-col {
+      min-height: 460px;
+      padding: 10px;
+      border-radius: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    .kanban-col.drag-over {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .kanban-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .post-card,
+    .campaign-card,
+    .idea-card {
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+      cursor: default;
+    }
+
+    .post-card { cursor: grab; }
+    .post-card:active { cursor: grabbing; }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .card-title {
+      min-width: 0;
+    }
+
+    .card-title strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-title span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      min-height: 24px;
+      padding: 4px 7px;
+      border-radius: 7px;
+      color: var(--muted);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      font-size: 0.74rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pill.status { color: var(--text); }
+    .priority-high { color: var(--red); background: var(--red-soft); }
+    .priority-medium { color: var(--amber); background: var(--amber-soft); }
+    .priority-low { color: var(--green); background: var(--green-soft); }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--platform-color, var(--primary));
+      flex: 0 0 auto;
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .campaign-grid,
+    .idea-grid,
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .progress {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--surface-3);
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: var(--value, 0%);
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .check-item input {
+      width: auto;
+      min-height: 0;
+    }
+
+    .upload-zone {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+    }
+
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .asset {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .asset-preview {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1.35;
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .asset img,
+    .asset video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .asset-meta {
+      padding: 8px;
+      display: grid;
+      gap: 5px;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .asset-meta strong {
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal {
+      width: min(980px, 100%);
+      max-height: min(850px, calc(100vh - 36px));
+      overflow: auto;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      animation: liftIn 180ms ease both;
+    }
+
+    @keyframes liftIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 130;
+      display: grid;
+      gap: 8px;
+      width: min(380px, calc(100vw - 36px));
+      pointer-events: none;
+    }
+
+    .toast-message {
+      padding: 12px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      animation: liftIn 180ms ease both;
+    }
+
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1180px) {
+      .dashboard { grid-template-columns: repeat(2, 1fr); }
+      .main-grid,
+      .split-grid { grid-template-columns: 1fr; }
+      .campaign-grid,
+      .idea-grid,
+      .media-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 760px) {
+      .app { width: min(100% - 20px, 1560px); }
+      .topbar { grid-template-columns: 1fr; }
+      .top-actions .button { flex: 1; }
+      .dashboard,
+      .campaign-grid,
+      .idea-grid,
+      .media-grid,
+      .form-grid,
+      .check-grid,
+      .asset-grid { grid-template-columns: 1fr; }
+      .calendar-head { display: none; }
+      .month-grid { grid-template-columns: 1fr; }
+      .calendar-day { min-height: 120px; }
+      .panel-header { flex-direction: column; }
+      .toolbar { align-items: stretch; }
+      .toolbar > * { width: 100%; }
+      .row-actions { justify-content: stretch; }
+      .row-actions .button { flex: 1; }
+      .list-table,
+      .list-table tbody,
+      .list-table tr,
+      .list-table td { display: block; width: 100%; }
+      .list-table thead { display: none; }
+      .list-table td {
+        border-left: 1px solid var(--line);
+        border-right: 1px solid var(--line);
+        border-radius: 0;
+      }
+      .list-table td:first-child { border-radius: 8px 8px 0 0; }
+      .list-table td:last-child { border-radius: 0 0 8px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M5 5.5h14M5 12h14M5 18.5h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 15.5l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Content Calendar Studio</h1>
+          <p>Lokaler Postingkalender fuer Kampagnen, Social Content und Team-Workflows</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="button" id="importBtn" type="button">Import</button>
+        <button class="button" id="exportBtn" type="button">Export</button>
+        <a class="button donate" href="https://www.paypal.com/donate/?hosted_button_id=YC3JVKB9YAW4U" target="_blank" rel="noopener noreferrer">Spenden</a>
+        <button class="button primary" id="newPostBtn" type="button">Neuer Post</button>
+        <button class="button icon" id="themeBtn" type="button" title="Dark Mode umschalten" aria-label="Dark Mode umschalten">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 13.2A7.8 7.8 0 1 1 10.8 3a6.2 6.2 0 0 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="dashboard" aria-label="Dashboard">
+      <div class="metric"><span>Posts</span><strong id="metricPosts">0</strong></div>
+      <div class="metric"><span>Diese Woche</span><strong id="metricWeek">0</strong></div>
+      <div class="metric"><span>In Review</span><strong id="metricReview">0</strong></div>
+      <div class="metric"><span>Kampagnen</span><strong id="metricCampaigns">0</strong></div>
+      <div class="metric"><span>Media Assets</span><strong id="metricAssets">0</strong></div>
+    </section>
+
+    <main class="main-grid">
+      <aside class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Filter</h2>
+            <p>Schnell nach Team, Status, Plattform oder Content-Typ fokussieren.</p>
+          </div>
+        </div>
+        <div class="panel-body filters">
+          <div class="field">
+            <label for="searchInput">Suche</label>
+            <input id="searchInput" type="search" placeholder="Titel, Caption, Tag, Link" />
+          </div>
+          <div class="field">
+            <label for="platformFilter">Plattform</label>
+            <select id="platformFilter"></select>
+          </div>
+          <div class="field">
+            <label for="campaignFilter">Kampagne</label>
+            <select id="campaignFilter"></select>
+          </div>
+          <div class="field">
+            <label for="statusFilter">Status</label>
+            <select id="statusFilter"></select>
+          </div>
+          <div class="field">
+            <label for="ownerFilter">Verantwortlich</label>
+            <select id="ownerFilter"></select>
+          </div>
+          <div class="field">
+            <label for="typeFilter">Content-Typ</label>
+            <select id="typeFilter"></select>
+          </div>
+          <button class="button" id="resetFiltersBtn" type="button">Filter zuruecksetzen</button>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Planung</h2>
+            <p id="periodLabel">Monatsplanung</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Ansichten">
+            <button class="tab active" data-view="monthView" type="button">Monat</button>
+            <button class="tab" data-view="weekView" type="button">Woche</button>
+            <button class="tab" data-view="listView" type="button">Liste</button>
+            <button class="tab" data-view="kanbanView" type="button">Kanban</button>
+            <button class="tab" data-view="campaignView" type="button">Kampagnen</button>
+            <button class="tab" data-view="backlogView" type="button">Backlog</button>
+            <button class="tab" data-view="mediaView" type="button">Medien</button>
+            <button class="tab" data-view="configView" type="button">Konfiguration</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="toolbar">
+            <div class="row-actions">
+              <button class="button" id="prevBtn" type="button">Zurueck</button>
+              <button class="button" id="todayBtn" type="button">Heute</button>
+              <button class="button" id="nextBtn" type="button">Weiter</button>
+            </div>
+            <div class="row-actions">
+              <button class="button" id="newCampaignBtn" type="button">Neue Kampagne</button>
+              <button class="button" id="newIdeaBtn" type="button">Neue Idee</button>
+            </div>
+          </div>
+
+          <section class="view active" id="monthView">
+            <div class="calendar-head" id="monthHead"></div>
+            <div class="month-grid" id="monthGrid"></div>
+          </section>
+
+          <section class="view" id="weekView">
+            <div class="week-grid" id="weekGrid"></div>
+          </section>
+
+          <section class="view" id="listView">
+            <table class="list-table">
+              <thead>
+                <tr>
+                  <th>Titel</th>
+                  <th>Datum</th>
+                  <th>Plattform</th>
+                  <th>Status</th>
+                  <th>Owner</th>
+                  <th>KPI</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="listBody"></tbody>
+            </table>
+          </section>
+
+          <section class="view" id="kanbanView">
+            <div class="kanban" id="kanbanBoard"></div>
+          </section>
+
+          <section class="view" id="campaignView">
+            <div class="split-grid">
+              <div>
+                <div class="campaign-grid" id="campaignGrid"></div>
+              </div>
+              <aside class="panel">
+                <div class="panel-header">
+                  <div>
+                    <h3>Timeline</h3>
+                    <p>Kampagnenzeitraeume und Fortschritt.</p>
+                  </div>
+                </div>
+                <div class="panel-body" id="timeline"></div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="view" id="backlogView">
+            <div class="idea-grid" id="ideaGrid"></div>
+          </section>
+
+          <section class="view" id="mediaView">
+            <div class="media-grid" id="mediaGrid"></div>
+          </section>
+
+          <section class="view" id="configView">
+            <div class="split-grid">
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <h3>Kampagnen</h3>
+                    <p>Kampagnen zentral anlegen, bearbeiten und farblich steuern.</p>
+                  </div>
+                  <button class="button" id="configNewCampaignBtn" type="button">Neue Kampagne</button>
+                </div>
+                <div class="panel-body">
+                  <div class="campaign-grid" id="configCampaignList"></div>
+                </div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-header">
+                  <div>
+                    <h3>Mitarbeiter</h3>
+                    <p>Teammitglieder fuer Verantwortlichkeiten und Filter verwalten.</p>
+                  </div>
+                  <button class="button" id="newEmployeeBtn" type="button">Mitarbeiter hinzufuegen</button>
+                </div>
+                <div class="panel-body">
+                  <div class="idea-grid" id="employeeList"></div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="postModal" role="dialog" aria-modal="true" aria-labelledby="postModalTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h3 id="postModalTitle">Post bearbeiten</h3>
+          <p>Content, Workflow, Assets, KPI und Versionen an einem Ort.</p>
+        </div>
+        <button class="button icon" id="closePostModalBtn" type="button" aria-label="Schliessen">x</button>
+      </div>
+      <div class="panel-body">
+        <form id="postForm" class="form-grid">
+          <input type="hidden" id="postId" />
+          <div class="field full">
+            <label for="postTitle">Titel</label>
+            <input id="postTitle" required placeholder="Launch Reel - Feature Teaser" />
+          </div>
+          <div class="field full">
+            <label for="postCaption">Beschreibung / Caption</label>
+            <textarea id="postCaption" placeholder="Copy, Hook, Storyline oder Newsletter-Text"></textarea>
+          </div>
+          <div class="field">
+            <label for="postPlatform">Plattform</label>
+            <select id="postPlatform"></select>
+          </div>
+          <div class="field">
+            <label for="postType">Post-Typ</label>
+            <select id="postType"></select>
+          </div>
+          <div class="field">
+            <label for="postDate">Veroeffentlichungsdatum</label>
+            <input id="postDate" type="date" />
+          </div>
+          <div class="field">
+            <label for="postTime">Uhrzeit</label>
+            <input id="postTime" type="time" />
+          </div>
+          <div class="field">
+            <label for="postStatus">Status</label>
+            <select id="postStatus"></select>
+          </div>
+          <div class="field">
+            <label for="postOwner">Verantwortliche Person</label>
+            <select id="postOwner"></select>
+          </div>
+          <div class="field">
+            <label for="postCampaign">Kampagne</label>
+            <select id="postCampaign"></select>
+          </div>
+          <div class="field">
+            <label for="postPriority">Prioritaet</label>
+            <select id="postPriority">
+              <option>low</option>
+              <option selected>medium</option>
+              <option>high</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="postTags">Tags</label>
+            <input id="postTags" placeholder="launch, product, dach" />
+          </div>
+          <div class="field">
+            <label for="postCta">Ziel / CTA</label>
+            <input id="postCta" placeholder="Demo buchen" />
+          </div>
+          <div class="field full">
+            <label for="postHashtags">Hashtags</label>
+            <input id="postHashtags" placeholder="#marketing #launch" />
+          </div>
+          <div class="field full">
+            <label for="postLinks">Links</label>
+            <textarea id="postLinks" placeholder="Briefing, Drive-Link, Referenzen"></textarea>
+          </div>
+          <div class="field full">
+            <label for="postUtm">UTM-Link</label>
+            <input id="postUtm" placeholder="https://example.com/?utm_source=..." />
+          </div>
+          <div class="field full">
+            <label for="postNotes">Notizen</label>
+            <textarea id="postNotes" placeholder="Feedback, offene Fragen, Produktionsdetails"></textarea>
+          </div>
+          <div class="field">
+            <label for="postReach">Reichweite</label>
+            <input id="postReach" type="number" min="0" />
+          </div>
+          <div class="field">
+            <label for="postClicks">Klicks</label>
+            <input id="postClicks" type="number" min="0" />
+          </div>
+          <div class="field">
+            <label for="postEngagement">Engagement</label>
+            <input id="postEngagement" type="number" min="0" />
+          </div>
+          <div class="field">
+            <label for="postLeads">Leads</label>
+            <input id="postLeads" type="number" min="0" />
+          </div>
+          <div class="field full">
+            <label>Content-Checklist</label>
+            <div class="check-grid" id="checklistFields"></div>
+          </div>
+          <div class="field full">
+            <label>Creative Uploads</label>
+            <div class="upload-zone">
+              <input id="assetInput" type="file" multiple accept="image/*,video/*,.pdf,application/pdf" />
+              <div class="asset-grid" id="assetPreview"></div>
+            </div>
+          </div>
+          <div class="field full">
+            <label>Versionierung</label>
+            <div id="versionList"></div>
+          </div>
+          <div class="field full">
+            <div class="row-actions">
+              <button class="button primary" id="savePostBtn" type="button">Speichern</button>
+              <button class="button" id="duplicatePostBtn" type="button">Duplizieren</button>
+              <button class="button danger" id="deletePostBtn" type="button">Loeschen</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="campaignModal" role="dialog" aria-modal="true" aria-labelledby="campaignModalTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h3 id="campaignModalTitle">Kampagne</h3>
+          <p>Budget, Ziel, Zeitraum und Farbe fuer alle zugehoerigen Posts.</p>
+        </div>
+        <button class="button icon" id="closeCampaignModalBtn" type="button" aria-label="Schliessen">x</button>
+      </div>
+      <div class="panel-body">
+        <form id="campaignForm" class="form-grid">
+          <input type="hidden" id="campaignId" />
+          <div class="field full">
+            <label for="campaignName">Name</label>
+            <input id="campaignName" placeholder="Spring Launch" />
+          </div>
+          <div class="field">
+            <label for="campaignStart">Startdatum</label>
+            <input id="campaignStart" type="date" />
+          </div>
+          <div class="field">
+            <label for="campaignEnd">Enddatum</label>
+            <input id="campaignEnd" type="date" />
+          </div>
+          <div class="field">
+            <label for="campaignBudget">Budget</label>
+            <input id="campaignBudget" type="number" min="0" placeholder="5000" />
+          </div>
+          <div class="field">
+            <label for="campaignColor">Farbe</label>
+            <input id="campaignColor" type="color" value="#2563eb" />
+          </div>
+          <div class="field full">
+            <label for="campaignGoal">Ziel der Kampagne</label>
+            <textarea id="campaignGoal" placeholder="Awareness, Leads, Launch-Kommunikation"></textarea>
+          </div>
+        </form>
+        <div class="row-actions" style="margin-top: 12px;">
+          <button class="button primary" id="saveCampaignBtn" type="button">Speichern</button>
+          <button class="button danger" id="deleteCampaignBtn" type="button">Loeschen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="ideaModal" role="dialog" aria-modal="true" aria-labelledby="ideaModalTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h3 id="ideaModalTitle">Content-Idee</h3>
+          <p>Backlog fuer Formate, Hooks und wiederkehrende Serien.</p>
+        </div>
+        <button class="button icon" id="closeIdeaModalBtn" type="button" aria-label="Schliessen">x</button>
+      </div>
+      <div class="panel-body">
+        <form id="ideaForm" class="form-grid">
+          <input type="hidden" id="ideaId" />
+          <div class="field full">
+            <label for="ideaTitle">Titel</label>
+            <input id="ideaTitle" placeholder="Behind the scenes Serie" />
+          </div>
+          <div class="field">
+            <label for="ideaType">Format</label>
+            <select id="ideaType"></select>
+          </div>
+          <div class="field">
+            <label for="ideaOwner">Owner</label>
+            <select id="ideaOwner"></select>
+          </div>
+          <div class="field full">
+            <label for="ideaNotes">Notizen</label>
+            <textarea id="ideaNotes"></textarea>
+          </div>
+        </form>
+        <div class="row-actions" style="margin-top: 12px;">
+          <button class="button primary" id="saveIdeaBtn" type="button">Speichern</button>
+          <button class="button" id="promoteIdeaBtn" type="button">In Post umwandeln</button>
+          <button class="button danger" id="deleteIdeaBtn" type="button">Loeschen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="employeeModal" role="dialog" aria-modal="true" aria-labelledby="employeeModalTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h3 id="employeeModalTitle">Mitarbeiter</h3>
+          <p>Name, Rolle und Kontakt fuer Verantwortlichkeiten im Kalender.</p>
+        </div>
+        <button class="button icon" id="closeEmployeeModalBtn" type="button" aria-label="Schliessen">x</button>
+      </div>
+      <div class="panel-body">
+        <form id="employeeForm" class="form-grid">
+          <input type="hidden" id="employeeId" />
+          <div class="field">
+            <label for="employeeName">Name</label>
+            <input id="employeeName" placeholder="Mara" />
+          </div>
+          <div class="field">
+            <label for="employeeRole">Rolle</label>
+            <input id="employeeRole" placeholder="Content Lead" />
+          </div>
+          <div class="field full">
+            <label for="employeeEmail">E-Mail</label>
+            <input id="employeeEmail" type="email" placeholder="mara@example.com" />
+          </div>
+        </form>
+        <div class="row-actions" style="margin-top: 12px;">
+          <button class="button primary" id="saveEmployeeBtn" type="button">Speichern</button>
+          <button class="button danger" id="deleteEmployeeBtn" type="button">Loeschen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input class="hidden" id="importFile" type="file" accept="application/json,.json" />
+  <div class="toast" id="toast"></div>
+
+  <script>
+    "use strict";
+
+    /*
+      Content Calendar Studio speichert alles lokal im Browser.
+      Assets werden als Data-URLs abgelegt; fuer sehr grosse Videobibliotheken
+      waere IndexedDB besser, aber localStorage haelt die Single-File-App simpel.
+    */
+
+    const STORAGE_KEY = "content-calendar-studio-v1";
+    const THEME_KEY = "content-calendar-theme";
+    const weekdays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+    const platforms = ["Instagram", "TikTok", "LinkedIn", "YouTube", "Facebook", "Pinterest", "X / Twitter", "Newsletter", "Blog"];
+    const types = ["Reel", "Story", "Carousel", "Short", "Video", "Static Post", "Blogartikel", "Newsletter"];
+    const statuses = ["Idee", "In Erstellung", "In Review", "Freigegeben", "Geplant", "Veroeffentlicht"];
+    const priorities = ["low", "medium", "high"];
+    const checklistItems = ["Briefing", "Copy", "Creative", "UTM", "Review", "Freigabe"];
+    const platformColors = {
+      "Instagram": "#d946ef",
+      "TikTok": "#111827",
+      "LinkedIn": "#0a66c2",
+      "YouTube": "#ef4444",
+      "Facebook": "#2563eb",
+      "Pinterest": "#bd081c",
+      "X / Twitter": "#475569",
+      "Newsletter": "#0f766e",
+      "Blog": "#8b5cf6"
+    };
+
+    const els = {};
+    const ui = {
+      activeView: "monthView",
+      currentDate: startOfMonth(new Date()),
+      dragPostId: null
+    };
+    let state = loadState();
+
+    init();
+
+    function init() {
+      cacheElements();
+      document.documentElement.dataset.theme = localStorage.getItem(THEME_KEY) || "light";
+      populateStaticSelects();
+      bindEvents();
+      renderAll();
+    }
+
+    function cacheElements() {
+      [
+        "metricPosts", "metricWeek", "metricReview", "metricCampaigns", "metricAssets", "periodLabel",
+        "monthHead", "monthGrid", "weekGrid", "listBody", "kanbanBoard", "campaignGrid", "timeline",
+        "ideaGrid", "mediaGrid", "configCampaignList", "employeeList", "searchInput", "platformFilter",
+        "campaignFilter", "statusFilter", "ownerFilter", "typeFilter", "postModal", "campaignModal",
+        "ideaModal", "employeeModal", "postForm", "campaignForm", "ideaForm", "employeeForm", "assetInput", "assetPreview",
+        "versionList", "checklistFields", "toast", "importFile"
+      ].forEach((id) => els[id] = document.getElementById(id));
+    }
+
+    function bindEvents() {
+      document.querySelectorAll(".tab").forEach((button) => {
+        button.addEventListener("click", () => setView(button.dataset.view));
+      });
+
+      document.getElementById("newPostBtn").addEventListener("click", () => openPostModal());
+      document.getElementById("newCampaignBtn").addEventListener("click", () => openCampaignModal());
+      document.getElementById("configNewCampaignBtn").addEventListener("click", () => openCampaignModal());
+      document.getElementById("newIdeaBtn").addEventListener("click", () => openIdeaModal());
+      document.getElementById("newEmployeeBtn").addEventListener("click", () => openEmployeeModal());
+      document.getElementById("savePostBtn").addEventListener("click", savePost);
+      document.getElementById("saveCampaignBtn").addEventListener("click", saveCampaign);
+      document.getElementById("saveIdeaBtn").addEventListener("click", saveIdea);
+      document.getElementById("saveEmployeeBtn").addEventListener("click", saveEmployee);
+      document.getElementById("duplicatePostBtn").addEventListener("click", duplicateCurrentPost);
+      document.getElementById("deletePostBtn").addEventListener("click", deleteCurrentPost);
+      document.getElementById("deleteCampaignBtn").addEventListener("click", deleteCurrentCampaign);
+      document.getElementById("deleteIdeaBtn").addEventListener("click", deleteCurrentIdea);
+      document.getElementById("deleteEmployeeBtn").addEventListener("click", deleteCurrentEmployee);
+      document.getElementById("promoteIdeaBtn").addEventListener("click", promoteIdea);
+      document.getElementById("prevBtn").addEventListener("click", () => movePeriod(-1));
+      document.getElementById("nextBtn").addEventListener("click", () => movePeriod(1));
+      document.getElementById("todayBtn").addEventListener("click", () => {
+        ui.currentDate = ui.activeView === "weekView" ? startOfWeek(new Date()) : startOfMonth(new Date());
+        renderAll();
+      });
+      document.getElementById("themeBtn").addEventListener("click", toggleTheme);
+      document.getElementById("exportBtn").addEventListener("click", exportJson);
+      document.getElementById("importBtn").addEventListener("click", () => els.importFile.click());
+      els.importFile.addEventListener("change", importJson);
+      document.getElementById("resetFiltersBtn").addEventListener("click", resetFilters);
+      els.assetInput.addEventListener("change", handleAssets);
+
+      ["searchInput", "platformFilter", "campaignFilter", "statusFilter", "ownerFilter", "typeFilter"].forEach((id) => {
+        els[id].addEventListener("input", renderAll);
+        els[id].addEventListener("change", renderAll);
+      });
+
+      [
+        ["closePostModalBtn", els.postModal],
+        ["closeCampaignModalBtn", els.campaignModal],
+        ["closeIdeaModalBtn", els.ideaModal],
+        ["closeEmployeeModalBtn", els.employeeModal]
+      ].forEach(([buttonId, modal]) => document.getElementById(buttonId).addEventListener("click", () => closeModal(modal)));
+
+      [els.postModal, els.campaignModal, els.ideaModal, els.employeeModal].forEach((modal) => {
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) closeModal(modal);
+        });
+      });
+    }
+
+    function loadState() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (!parsed || !Array.isArray(parsed.posts)) throw new Error("No state");
+        return normalizeState(parsed);
+      } catch {
+        return seedState();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {
+        toast("Autosave fehlgeschlagen. Der lokale Speicher ist wahrscheinlich voll.");
+      }
+    }
+
+    function normalizeState(data) {
+      const posts = Array.isArray(data.posts) ? data.posts.map(normalizePost).filter(Boolean) : [];
+      const ideas = Array.isArray(data.ideas) ? data.ideas.map(normalizeIdea).filter(Boolean) : [];
+      const derivedEmployees = unique([...posts.map((post) => post.owner), ...ideas.map((idea) => idea.owner)].filter(Boolean))
+        .map((name) => normalizeEmployee({ name }));
+      return {
+        posts,
+        campaigns: Array.isArray(data.campaigns) ? data.campaigns.map(normalizeCampaign).filter(Boolean) : [],
+        ideas,
+        employees: Array.isArray(data.employees) ? data.employees.map(normalizeEmployee).filter(Boolean) : derivedEmployees
+      };
+    }
+
+    function seedState() {
+      const today = new Date();
+      const c1 = {
+        id: id(),
+        name: "Spring Launch",
+        start: isoDate(addDays(today, -5)),
+        end: isoDate(addDays(today, 22)),
+        budget: 8500,
+        goal: "Produktlaunch kommunikativ begleiten und Demo-Anfragen steigern.",
+        color: "#2563eb"
+      };
+      const c2 = {
+        id: id(),
+        name: "Always-on Education",
+        start: isoDate(addDays(today, -30)),
+        end: isoDate(addDays(today, 45)),
+        budget: 2800,
+        goal: "Kontinuierliche Nachfrage durch How-to-Content und Newsletter.",
+        color: "#0f766e"
+      };
+      return {
+        campaigns: [c1, c2],
+        employees: [
+          { id: id(), name: "Mara", role: "Social Media Lead", email: "mara@example.com" },
+          { id: id(), name: "Jonas", role: "Video & LinkedIn", email: "jonas@example.com" },
+          { id: id(), name: "Lea", role: "CRM Marketing", email: "lea@example.com" },
+          { id: id(), name: "Sam", role: "Content SEO", email: "sam@example.com" },
+          { id: id(), name: "Team Content", role: "Shared Owner", email: "" }
+        ],
+        posts: [
+          samplePost("Launch Reel - Feature Teaser", "Instagram", "Reel", c1.id, addDays(today, 1), "10:00", "In Review", "Mara", "high"),
+          samplePost("Founder POV zum Launch", "LinkedIn", "Video", c1.id, addDays(today, 3), "09:30", "In Erstellung", "Jonas", "medium"),
+          samplePost("Newsletter Launch Reminder", "Newsletter", "Newsletter", c1.id, addDays(today, 6), "08:15", "Geplant", "Lea", "high"),
+          samplePost("SEO How-to Artikel", "Blog", "Blogartikel", c2.id, addDays(today, 9), "11:00", "Freigegeben", "Sam", "medium"),
+          samplePost("TikTok Hook Test", "TikTok", "Short", c1.id, addDays(today, -1), "17:45", "Veroeffentlicht", "Mara", "low")
+        ],
+        ideas: [
+          { id: id(), title: "Weekly myth busting Serie", type: "Carousel", owner: "Team Content", notes: "Kurze Irrtuemer aus Sales Calls aufgreifen.", createdAt: now() },
+          { id: id(), title: "Kundenfrage als Short", type: "Short", owner: "Jonas", notes: "Aus Support-Tickets ableiten.", createdAt: now() }
+        ]
+      };
+    }
+
+    function samplePost(title, platform, type, campaignId, date, time, status, owner, priority) {
+      return normalizePost({
+        id: id(),
+        title,
+        caption: "Kurzbriefing und Copy werden im Review finalisiert.",
+        platform,
+        type,
+        date: isoDate(date),
+        time,
+        status,
+        owner,
+        tags: "launch, content",
+        campaignId,
+        cta: "Mehr erfahren",
+        hashtags: "#marketing #content",
+        notes: "",
+        links: "",
+        utm: "",
+        priority,
+        checklist: { Briefing: true, Copy: status !== "Idee", Creative: false, UTM: false, Review: status === "Freigegeben", Freigabe: status === "Geplant" },
+        assets: [],
+        kpi: { reach: 0, clicks: 0, engagement: 0, leads: 0 },
+        versions: [{ at: now(), label: "Initialer Entwurf" }],
+        createdAt: now(),
+        updatedAt: now()
+      });
+    }
+
+    function normalizePost(post) {
+      if (!post) return null;
+      return {
+        id: String(post.id || id()),
+        title: String(post.title || "Unbenannter Post"),
+        caption: String(post.caption || ""),
+        platform: platforms.includes(post.platform) ? post.platform : platforms[0],
+        type: types.includes(post.type) ? post.type : types[0],
+        date: post.date || isoDate(new Date()),
+        time: post.time || "09:00",
+        status: statuses.includes(post.status) ? post.status : statuses[0],
+        owner: String(post.owner || ""),
+        tags: String(post.tags || ""),
+        campaignId: String(post.campaignId || ""),
+        cta: String(post.cta || ""),
+        hashtags: String(post.hashtags || ""),
+        notes: String(post.notes || ""),
+        links: String(post.links || ""),
+        utm: String(post.utm || ""),
+        priority: priorities.includes(post.priority) ? post.priority : "medium",
+        checklist: { ...Object.fromEntries(checklistItems.map((item) => [item, false])), ...(post.checklist || {}) },
+        assets: Array.isArray(post.assets) ? post.assets : [],
+        kpi: {
+          reach: Number(post.kpi?.reach || 0),
+          clicks: Number(post.kpi?.clicks || 0),
+          engagement: Number(post.kpi?.engagement || 0),
+          leads: Number(post.kpi?.leads || 0)
+        },
+        versions: Array.isArray(post.versions) ? post.versions : [],
+        createdAt: post.createdAt || now(),
+        updatedAt: post.updatedAt || now()
+      };
+    }
+
+    function normalizeCampaign(campaign) {
+      if (!campaign) return null;
+      return {
+        id: String(campaign.id || id()),
+        name: String(campaign.name || "Unbenannte Kampagne"),
+        start: campaign.start || isoDate(new Date()),
+        end: campaign.end || campaign.start || isoDate(new Date()),
+        budget: Number(campaign.budget || 0),
+        goal: String(campaign.goal || ""),
+        color: /^#[0-9a-f]{6}$/i.test(String(campaign.color || "")) ? String(campaign.color) : "#2563eb"
+      };
+    }
+
+    function normalizeIdea(idea) {
+      if (!idea) return null;
+      return {
+        id: String(idea.id || id()),
+        title: String(idea.title || "Neue Idee"),
+        type: types.includes(idea.type) ? idea.type : types[0],
+        owner: String(idea.owner || ""),
+        notes: String(idea.notes || ""),
+        createdAt: idea.createdAt || now()
+      };
+    }
+
+    function normalizeEmployee(employee) {
+      if (!employee) return null;
+      const name = String(employee.name || "").trim();
+      if (!name) return null;
+      return {
+        id: String(employee.id || id()),
+        name,
+        role: String(employee.role || ""),
+        email: String(employee.email || "")
+      };
+    }
+
+    function populateStaticSelects() {
+      fillSelect(document.getElementById("postPlatform"), platforms);
+      fillSelect(document.getElementById("postType"), types);
+      fillSelect(document.getElementById("postStatus"), statuses);
+      fillSelect(document.getElementById("ideaType"), types);
+      fillSelect(els.platformFilter, ["Alle Plattformen", ...platforms], "");
+      fillSelect(els.statusFilter, ["Alle Status", ...statuses], "");
+      fillSelect(els.typeFilter, ["Alle Content-Typen", ...types], "");
+    }
+
+    function fillSelect(select, values, emptyValue = null) {
+      select.innerHTML = values.map((value, index) => {
+        const actualValue = emptyValue !== null && index === 0 ? emptyValue : value;
+        return `<option value="${escapeHtml(actualValue)}">${escapeHtml(value)}</option>`;
+      }).join("");
+    }
+
+    function renderAll() {
+      refreshDynamicSelects();
+      renderMetrics();
+      renderPeriodLabel();
+      renderMonth();
+      renderWeek();
+      renderList();
+      renderKanban();
+      renderCampaigns();
+      renderBacklog();
+      renderMedia();
+      renderConfig();
+      saveState();
+    }
+
+    function filteredPosts() {
+      const search = clean(els.searchInput.value);
+      const platform = els.platformFilter.value;
+      const campaignId = els.campaignFilter.value;
+      const status = els.statusFilter.value;
+      const owner = els.ownerFilter.value;
+      const type = els.typeFilter.value;
+
+      return state.posts.filter((post) => {
+        const haystack = clean([post.title, post.caption, post.tags, post.owner, post.cta, post.hashtags, post.links, post.utm, post.notes].join(" "));
+        return (!search || haystack.includes(search))
+          && (!platform || post.platform === platform)
+          && (!campaignId || post.campaignId === campaignId)
+          && (!status || post.status === status)
+          && (!owner || post.owner === owner)
+          && (!type || post.type === type);
+      }).sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
+    }
+
+    function refreshDynamicSelects() {
+      const selectedOwner = els.ownerFilter.value;
+      const selectedCampaign = els.campaignFilter.value;
+      const owners = unique([
+        ...state.employees.map((employee) => employee.name),
+        ...state.posts.map((post) => post.owner),
+        ...state.ideas.map((idea) => idea.owner)
+      ].filter(Boolean));
+      fillSelect(els.ownerFilter, ["Alle Personen", ...owners], "");
+      fillSelect(els.campaignFilter, ["Alle Kampagnen", ...state.campaigns.map((campaign) => campaign.name)], "");
+      els.campaignFilter.querySelectorAll("option").forEach((option, index) => {
+        if (index > 0) option.value = state.campaigns[index - 1].id;
+      });
+      els.ownerFilter.value = owners.includes(selectedOwner) ? selectedOwner : "";
+      els.campaignFilter.value = state.campaigns.some((campaign) => campaign.id === selectedCampaign) ? selectedCampaign : "";
+
+      document.getElementById("postCampaign").innerHTML = `<option value="">Keine Kampagne</option>` + state.campaigns.map((campaign) => `<option value="${escapeHtml(campaign.id)}">${escapeHtml(campaign.name)}</option>`).join("");
+      const ownerOptions = `<option value="">Nicht zugewiesen</option>` + owners.map((owner) => `<option value="${escapeHtml(owner)}">${escapeHtml(owner)}</option>`).join("");
+      document.getElementById("postOwner").innerHTML = ownerOptions;
+      document.getElementById("ideaOwner").innerHTML = ownerOptions;
+    }
+
+    function renderMetrics() {
+      const weekStart = startOfWeek(new Date());
+      const weekEnd = addDays(weekStart, 6);
+      els.metricPosts.textContent = state.posts.length;
+      els.metricWeek.textContent = state.posts.filter((post) => between(post.date, weekStart, weekEnd)).length;
+      els.metricReview.textContent = state.posts.filter((post) => post.status === "In Review").length;
+      els.metricCampaigns.textContent = state.campaigns.length;
+      els.metricAssets.textContent = state.posts.reduce((sum, post) => sum + post.assets.length, 0);
+    }
+
+    function renderPeriodLabel() {
+      if (ui.activeView === "weekView") {
+        const start = startOfWeek(ui.currentDate);
+        els.periodLabel.textContent = `${formatDate(start)} bis ${formatDate(addDays(start, 6))}`;
+      } else {
+        els.periodLabel.textContent = ui.currentDate.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+      }
+    }
+
+    function renderMonth() {
+      els.monthHead.innerHTML = weekdays.map((day) => `<div>${day}</div>`).join("");
+      els.monthGrid.innerHTML = "";
+      const start = startOfWeek(startOfMonth(ui.currentDate));
+      const posts = filteredPosts();
+      for (let i = 0; i < 42; i += 1) {
+        const date = addDays(start, i);
+        const dateKey = isoDate(date);
+        const dayPosts = posts.filter((post) => post.date === dateKey);
+        els.monthGrid.appendChild(dayCell(date, dayPosts, date.getMonth() !== ui.currentDate.getMonth()));
+      }
+    }
+
+    function renderWeek() {
+      els.weekGrid.innerHTML = "";
+      const start = startOfWeek(ui.currentDate);
+      const posts = filteredPosts();
+      for (let i = 0; i < 7; i += 1) {
+        const date = addDays(start, i);
+        const dayPosts = posts.filter((post) => post.date === isoDate(date));
+        els.weekGrid.appendChild(dayCell(date, dayPosts, false));
+      }
+    }
+
+    function dayCell(date, posts, muted) {
+      const cell = document.createElement("article");
+      const isToday = isoDate(date) === isoDate(new Date());
+      cell.className = `calendar-day ${muted ? "day-muted" : ""} ${isToday ? "is-today" : ""}`;
+      cell.dataset.date = isoDate(date);
+      cell.innerHTML = `
+        <div class="day-top">
+          <span class="day-number">${date.getDate()}</span>
+          ${isToday ? `<span class="today-badge">Heute</span>` : `<span class="day-count">${posts.length}</span>`}
+        </div>
+        ${isToday ? `<span class="day-count">${posts.length} Post${posts.length === 1 ? "" : "s"}</span>` : ""}
+        <div class="day-posts"></div>
+      `;
+      const list = cell.querySelector(".day-posts");
+      posts.slice(0, 5).forEach((post) => list.appendChild(miniPost(post)));
+      if (posts.length > 5) {
+        const more = document.createElement("button");
+        more.className = "button";
+        more.type = "button";
+        more.textContent = `+${posts.length - 5} mehr`;
+        list.appendChild(more);
+      }
+      cell.addEventListener("dragover", allowDrop);
+      cell.addEventListener("dragleave", () => cell.classList.remove("drag-over"));
+      cell.addEventListener("drop", (event) => dropPostOnDate(event, cell.dataset.date));
+      cell.addEventListener("dblclick", () => openPostModal({ date: cell.dataset.date }));
+      return cell;
+    }
+
+    function miniPost(post) {
+      const item = document.createElement("div");
+      item.className = "mini-post";
+      item.draggable = true;
+      item.dataset.id = post.id;
+      item.style.setProperty("--platform-color", postColor(post));
+      item.innerHTML = `<strong>${escapeHtml(post.title)}</strong><span>${escapeHtml(post.time)} · ${escapeHtml(post.platform)} · ${escapeHtml(post.status)}</span>`;
+      item.addEventListener("dragstart", () => ui.dragPostId = post.id);
+      item.addEventListener("click", () => openPostModal(post));
+      return item;
+    }
+
+    function renderList() {
+      const posts = filteredPosts();
+      els.listBody.innerHTML = posts.length ? "" : `<tr><td colspan="7"><div class="empty">Keine Posts gefunden.</div></td></tr>`;
+      posts.forEach((post) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><strong>${escapeHtml(post.title)}</strong><br><span class="pill">${escapeHtml(post.type)}</span></td>
+          <td>${escapeHtml(formatDate(parseDate(post.date)))}<br><span class="pill">${escapeHtml(post.time)}</span></td>
+          <td><span class="pill"><span class="dot" style="--platform-color:${postColor(post)}"></span>${escapeHtml(post.platform)}</span></td>
+          <td><span class="pill status">${escapeHtml(post.status)}</span></td>
+          <td>${escapeHtml(post.owner || "-")}</td>
+          <td>${Number(post.kpi.reach).toLocaleString("de-DE")} Reichweite<br>${Number(post.kpi.leads).toLocaleString("de-DE")} Leads</td>
+          <td><button class="button" type="button">Bearbeiten</button></td>
+        `;
+        row.querySelector("button").addEventListener("click", () => openPostModal(post));
+        els.listBody.appendChild(row);
+      });
+    }
+
+    function renderKanban() {
+      const posts = filteredPosts();
+      els.kanbanBoard.innerHTML = "";
+      statuses.forEach((status) => {
+        const col = document.createElement("div");
+        col.className = "kanban-col";
+        col.dataset.status = status;
+        const statusPosts = posts.filter((post) => post.status === status);
+        col.innerHTML = `<div class="kanban-title"><span>${escapeHtml(status)}</span><span>${statusPosts.length}</span></div>`;
+        statusPosts.forEach((post) => col.appendChild(postCard(post)));
+        col.addEventListener("dragover", allowDrop);
+        col.addEventListener("dragleave", () => col.classList.remove("drag-over"));
+        col.addEventListener("drop", (event) => dropPostOnStatus(event, status));
+        els.kanbanBoard.appendChild(col);
+      });
+    }
+
+    function postCard(post) {
+      const card = document.createElement("article");
+      card.className = "post-card";
+      card.draggable = true;
+      card.style.setProperty("--platform-color", postColor(post));
+      card.innerHTML = `
+        <div class="card-top">
+          <div class="card-title">
+            <strong>${escapeHtml(post.title)}</strong>
+            <span>${escapeHtml(formatDate(parseDate(post.date)))} · ${escapeHtml(post.time)}</span>
+          </div>
+          <span class="dot"></span>
+        </div>
+        <div class="pill-row">
+          <span class="pill">${escapeHtml(post.platform)}</span>
+          <span class="pill">${escapeHtml(post.type)}</span>
+          <span class="pill priority-${post.priority}">${escapeHtml(post.priority)}</span>
+          <span class="pill">${escapeHtml(post.owner || "unassigned")}</span>
+        </div>
+      `;
+      card.addEventListener("dragstart", () => ui.dragPostId = post.id);
+      card.addEventListener("click", () => openPostModal(post));
+      return card;
+    }
+
+    function renderCampaigns() {
+      els.campaignGrid.innerHTML = state.campaigns.length ? "" : `<div class="empty">Noch keine Kampagnen.</div>`;
+      state.campaigns.forEach((campaign) => {
+        const posts = state.posts.filter((post) => post.campaignId === campaign.id);
+        const done = posts.filter((post) => post.status === "Veroeffentlicht").length;
+        const progress = posts.length ? Math.round(done / posts.length * 100) : campaignProgress(campaign);
+        const card = document.createElement("article");
+        card.className = "campaign-card";
+        card.innerHTML = `
+          <div class="card-top">
+            <div class="card-title">
+              <strong>${escapeHtml(campaign.name)}</strong>
+              <span>${escapeHtml(formatDate(parseDate(campaign.start)))} - ${escapeHtml(formatDate(parseDate(campaign.end)))}</span>
+            </div>
+            <span class="dot" style="--platform-color:${escapeHtml(campaign.color)}"></span>
+          </div>
+          <p class="pill">${Number(campaign.budget).toLocaleString("de-DE")} EUR Budget</p>
+          <div class="progress" aria-label="Fortschritt"><span style="--value:${progress}%"></span></div>
+          <div class="pill-row"><span class="pill">${posts.length} Posts</span><span class="pill">${progress}% Fortschritt</span></div>
+          <p style="margin:0;color:var(--muted);font-size:.86rem;line-height:1.45;">${escapeHtml(campaign.goal || "Kein Ziel hinterlegt.")}</p>
+          <div class="row-actions"><button class="button" type="button">Bearbeiten</button></div>
+        `;
+        card.querySelector("button").addEventListener("click", () => openCampaignModal(campaign));
+        els.campaignGrid.appendChild(card);
+      });
+
+      els.timeline.innerHTML = state.campaigns.map((campaign) => `
+        <div style="display:grid;gap:7px;margin-bottom:12px;">
+          <strong>${escapeHtml(campaign.name)}</strong>
+          <div class="progress"><span style="--value:${campaignProgress(campaign)}%; background:${escapeHtml(campaign.color)}"></span></div>
+          <span class="pill">${escapeHtml(formatDate(parseDate(campaign.start)))} - ${escapeHtml(formatDate(parseDate(campaign.end)))}</span>
+        </div>
+      `).join("") || `<div class="empty">Keine Kampagnen-Timeline vorhanden.</div>`;
+    }
+
+    function renderBacklog() {
+      els.ideaGrid.innerHTML = state.ideas.length ? "" : `<div class="empty">Noch keine Ideen im Backlog.</div>`;
+      state.ideas.forEach((idea) => {
+        const card = document.createElement("article");
+        card.className = "idea-card";
+        card.innerHTML = `
+          <div class="card-title"><strong>${escapeHtml(idea.title)}</strong><span>${escapeHtml(idea.type)} · ${escapeHtml(idea.owner || "unassigned")}</span></div>
+          <p style="margin:0;color:var(--muted);font-size:.86rem;line-height:1.45;">${escapeHtml(idea.notes || "Keine Notizen.")}</p>
+          <div class="row-actions"><button class="button" type="button">Bearbeiten</button></div>
+        `;
+        card.querySelector("button").addEventListener("click", () => openIdeaModal(idea));
+        els.ideaGrid.appendChild(card);
+      });
+    }
+
+    function renderMedia() {
+      const assets = state.posts.flatMap((post) => post.assets.map((asset) => ({ ...asset, postTitle: post.title, postId: post.id })));
+      els.mediaGrid.innerHTML = assets.length ? "" : `<div class="empty">Noch keine Medien hochgeladen.</div>`;
+      assets.forEach((asset) => {
+        const card = document.createElement("article");
+        card.className = "asset";
+        card.innerHTML = `${assetPreviewMarkup(asset)}<div class="asset-meta"><strong>${escapeHtml(asset.name)}</strong><span>${escapeHtml(asset.postTitle)}</span><span>${formatBytes(asset.size)}</span></div>`;
+        card.addEventListener("click", () => openPostModal(state.posts.find((post) => post.id === asset.postId)));
+        els.mediaGrid.appendChild(card);
+      });
+    }
+
+    function renderConfig() {
+      els.configCampaignList.innerHTML = state.campaigns.length ? "" : `<div class="empty">Noch keine Kampagnen angelegt.</div>`;
+      state.campaigns.forEach((campaign) => {
+        const postCount = state.posts.filter((post) => post.campaignId === campaign.id).length;
+        const card = document.createElement("article");
+        card.className = "campaign-card";
+        card.innerHTML = `
+          <div class="card-top">
+            <div class="card-title">
+              <strong>${escapeHtml(campaign.name)}</strong>
+              <span>${escapeHtml(formatDate(parseDate(campaign.start)))} - ${escapeHtml(formatDate(parseDate(campaign.end)))}</span>
+            </div>
+            <span class="dot" style="--platform-color:${escapeHtml(campaign.color)}"></span>
+          </div>
+          <div class="pill-row">
+            <span class="pill">${postCount} Posts</span>
+            <span class="pill">${Number(campaign.budget).toLocaleString("de-DE")} EUR</span>
+          </div>
+          <div class="row-actions"><button class="button" type="button">Bearbeiten</button></div>
+        `;
+        card.querySelector("button").addEventListener("click", () => openCampaignModal(campaign));
+        els.configCampaignList.appendChild(card);
+      });
+
+      els.employeeList.innerHTML = state.employees.length ? "" : `<div class="empty">Noch keine Mitarbeiter angelegt.</div>`;
+      state.employees.forEach((employee) => {
+        const postCount = state.posts.filter((post) => post.owner === employee.name).length;
+        const card = document.createElement("article");
+        card.className = "idea-card";
+        card.innerHTML = `
+          <div class="card-title">
+            <strong>${escapeHtml(employee.name)}</strong>
+            <span>${escapeHtml(employee.role || "Keine Rolle")} ${employee.email ? "· " + escapeHtml(employee.email) : ""}</span>
+          </div>
+          <div class="pill-row"><span class="pill">${postCount} verantwortliche Posts</span></div>
+          <div class="row-actions"><button class="button" type="button">Bearbeiten</button></div>
+        `;
+        card.querySelector("button").addEventListener("click", () => openEmployeeModal(employee));
+        els.employeeList.appendChild(card);
+      });
+    }
+
+    function setView(view) {
+      ui.activeView = view;
+      document.querySelectorAll(".tab").forEach((button) => button.classList.toggle("active", button.dataset.view === view));
+      document.querySelectorAll(".view").forEach((section) => section.classList.toggle("active", section.id === view));
+      if (view === "weekView") ui.currentDate = startOfWeek(ui.currentDate);
+      if (view === "monthView") ui.currentDate = startOfMonth(ui.currentDate);
+      renderAll();
+    }
+
+    function movePeriod(direction) {
+      if (ui.activeView === "weekView") ui.currentDate = addDays(ui.currentDate, direction * 7);
+      else ui.currentDate = new Date(ui.currentDate.getFullYear(), ui.currentDate.getMonth() + direction, 1);
+      renderAll();
+    }
+
+    function allowDrop(event) {
+      event.preventDefault();
+      event.currentTarget.classList.add("drag-over");
+    }
+
+    function dropPostOnDate(event, date) {
+      event.preventDefault();
+      event.currentTarget.classList.remove("drag-over");
+      const post = state.posts.find((item) => item.id === ui.dragPostId);
+      if (!post) return;
+      post.date = date;
+      post.updatedAt = now();
+      post.versions.unshift({ at: now(), label: `Verschoben auf ${formatDate(parseDate(date))}` });
+      toast("Post verschoben.");
+      renderAll();
+    }
+
+    function dropPostOnStatus(event, status) {
+      event.preventDefault();
+      event.currentTarget.classList.remove("drag-over");
+      const post = state.posts.find((item) => item.id === ui.dragPostId);
+      if (!post) return;
+      post.status = status;
+      post.updatedAt = now();
+      post.versions.unshift({ at: now(), label: `Status geaendert zu ${status}` });
+      toast("Status aktualisiert.");
+      renderAll();
+    }
+
+    function openPostModal(post = {}) {
+      const data = normalizePost({ date: isoDate(new Date()), time: "09:00", ...post });
+      document.getElementById("postId").value = post.id || "";
+      document.getElementById("postTitle").value = post.id ? data.title : (post.title || "");
+      document.getElementById("postCaption").value = data.caption;
+      document.getElementById("postPlatform").value = data.platform;
+      document.getElementById("postType").value = data.type;
+      document.getElementById("postDate").value = data.date;
+      document.getElementById("postTime").value = data.time;
+      document.getElementById("postStatus").value = data.status;
+      document.getElementById("postOwner").value = data.owner;
+      document.getElementById("postCampaign").value = data.campaignId;
+      document.getElementById("postPriority").value = data.priority;
+      document.getElementById("postTags").value = data.tags;
+      document.getElementById("postCta").value = data.cta;
+      document.getElementById("postHashtags").value = data.hashtags;
+      document.getElementById("postLinks").value = data.links;
+      document.getElementById("postUtm").value = data.utm;
+      document.getElementById("postNotes").value = data.notes;
+      document.getElementById("postReach").value = data.kpi.reach || "";
+      document.getElementById("postClicks").value = data.kpi.clicks || "";
+      document.getElementById("postEngagement").value = data.kpi.engagement || "";
+      document.getElementById("postLeads").value = data.kpi.leads || "";
+      els.assetInput.value = "";
+      renderChecklist(data.checklist);
+      renderAssets(data.assets);
+      renderVersions(data.versions);
+      document.getElementById("deletePostBtn").classList.toggle("hidden", !post.id);
+      document.getElementById("duplicatePostBtn").classList.toggle("hidden", !post.id);
+      els.postModal.dataset.assets = JSON.stringify(data.assets);
+      els.postModal.dataset.versions = JSON.stringify(data.versions);
+      els.postModal.classList.add("open");
+    }
+
+    function collectPostForm() {
+      const old = state.posts.find((post) => post.id === document.getElementById("postId").value);
+      const checklist = {};
+      checklistItems.forEach((item) => checklist[item] = document.querySelector(`[data-check="${item}"]`).checked);
+      const versions = JSON.parse(els.postModal.dataset.versions || "[]");
+      return normalizePost({
+        id: old?.id || id(),
+        title: document.getElementById("postTitle").value.trim() || "Unbenannter Post",
+        caption: document.getElementById("postCaption").value,
+        platform: document.getElementById("postPlatform").value,
+        type: document.getElementById("postType").value,
+        date: document.getElementById("postDate").value || isoDate(new Date()),
+        time: document.getElementById("postTime").value || "09:00",
+        status: document.getElementById("postStatus").value,
+        owner: document.getElementById("postOwner").value.trim(),
+        campaignId: document.getElementById("postCampaign").value,
+        priority: document.getElementById("postPriority").value,
+        tags: document.getElementById("postTags").value,
+        cta: document.getElementById("postCta").value,
+        hashtags: document.getElementById("postHashtags").value,
+        links: document.getElementById("postLinks").value,
+        utm: document.getElementById("postUtm").value,
+        notes: document.getElementById("postNotes").value,
+        checklist,
+        assets: JSON.parse(els.postModal.dataset.assets || "[]"),
+        kpi: {
+          reach: document.getElementById("postReach").value,
+          clicks: document.getElementById("postClicks").value,
+          engagement: document.getElementById("postEngagement").value,
+          leads: document.getElementById("postLeads").value
+        },
+        versions: [{ at: now(), label: old ? "Bearbeitet" : "Erstellt" }, ...versions].slice(0, 20),
+        createdAt: old?.createdAt || now(),
+        updatedAt: now()
+      });
+    }
+
+    function savePost() {
+      const post = collectPostForm();
+      const exists = state.posts.some((item) => item.id === post.id);
+      state.posts = exists ? state.posts.map((item) => item.id === post.id ? post : item) : [post, ...state.posts];
+      closeModal(els.postModal);
+      toast("Post gespeichert.");
+      renderAll();
+    }
+
+    function duplicateCurrentPost() {
+      const post = collectPostForm();
+      post.id = id();
+      post.title = `${post.title} Kopie`;
+      post.status = "Idee";
+      post.createdAt = now();
+      post.updatedAt = now();
+      post.versions = [{ at: now(), label: "Dupliziert" }];
+      state.posts.unshift(post);
+      closeModal(els.postModal);
+      toast("Post dupliziert.");
+      renderAll();
+    }
+
+    function deleteCurrentPost() {
+      const idValue = document.getElementById("postId").value;
+      if (!idValue || !confirm("Post wirklich loeschen?")) return;
+      state.posts = state.posts.filter((post) => post.id !== idValue);
+      closeModal(els.postModal);
+      toast("Post geloescht.");
+      renderAll();
+    }
+
+    function renderChecklist(checklist) {
+      els.checklistFields.innerHTML = checklistItems.map((item) => `
+        <label class="check-item"><input type="checkbox" data-check="${escapeHtml(item)}" ${checklist?.[item] ? "checked" : ""}>${escapeHtml(item)}</label>
+      `).join("");
+    }
+
+    function handleAssets(event) {
+      const files = [...event.target.files];
+      const current = JSON.parse(els.postModal.dataset.assets || "[]");
+      if (!files.length) return;
+      let loaded = 0;
+      files.forEach((file) => {
+        if (file.size > 2.5 * 1024 * 1024) {
+          toast(`${file.name} ist gross. Lokaler Speicher kann begrenzt sein.`);
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          current.push({
+            id: id(),
+            name: file.name,
+            type: file.type || "application/octet-stream",
+            size: file.size,
+            data: reader.result,
+            addedAt: now()
+          });
+          loaded += 1;
+          if (loaded === files.length) {
+            els.postModal.dataset.assets = JSON.stringify(current);
+            renderAssets(current);
+            toast("Asset(s) hinzugefuegt.");
+          }
+        };
+        reader.onerror = () => toast(`${file.name} konnte nicht geladen werden.`);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderAssets(assets) {
+      els.assetPreview.innerHTML = assets.length ? "" : `<div class="empty">Noch keine Creatives.</div>`;
+      assets.forEach((asset) => {
+        const card = document.createElement("article");
+        card.className = "asset";
+        card.innerHTML = `${assetPreviewMarkup(asset)}<div class="asset-meta"><strong>${escapeHtml(asset.name)}</strong><span>${formatBytes(asset.size)}</span><button class="button danger" type="button">Entfernen</button></div>`;
+        card.querySelector("button").addEventListener("click", () => {
+          const next = assets.filter((item) => item.id !== asset.id);
+          els.postModal.dataset.assets = JSON.stringify(next);
+          renderAssets(next);
+        });
+        els.assetPreview.appendChild(card);
+      });
+    }
+
+    function assetPreviewMarkup(asset) {
+      if (asset.type.startsWith("image/")) return `<div class="asset-preview"><img src="${escapeHtml(asset.data)}" alt="${escapeHtml(asset.name)}"></div>`;
+      if (asset.type.startsWith("video/")) return `<div class="asset-preview"><video src="${escapeHtml(asset.data)}" muted controls></video></div>`;
+      return `<div class="asset-preview">PDF<br>${escapeHtml(asset.name)}</div>`;
+    }
+
+    function renderVersions(versions) {
+      els.versionList.innerHTML = versions.length ? versions.map((version) => `
+        <div class="pill" style="margin:0 6px 6px 0;">${escapeHtml(new Date(version.at).toLocaleString("de-DE"))}: ${escapeHtml(version.label)}</div>
+      `).join("") : `<div class="empty">Noch keine Versionen.</div>`;
+    }
+
+    function openCampaignModal(campaign = {}) {
+      const data = normalizeCampaign(campaign);
+      document.getElementById("campaignId").value = campaign.id || "";
+      document.getElementById("campaignName").value = campaign.id ? data.name : "";
+      document.getElementById("campaignStart").value = data.start;
+      document.getElementById("campaignEnd").value = data.end;
+      document.getElementById("campaignBudget").value = data.budget || "";
+      document.getElementById("campaignColor").value = data.color;
+      document.getElementById("campaignGoal").value = data.goal;
+      document.getElementById("deleteCampaignBtn").classList.toggle("hidden", !campaign.id);
+      els.campaignModal.classList.add("open");
+    }
+
+    function saveCampaign() {
+      const old = state.campaigns.find((campaign) => campaign.id === document.getElementById("campaignId").value);
+      const campaign = normalizeCampaign({
+        id: old?.id || id(),
+        name: document.getElementById("campaignName").value.trim() || "Unbenannte Kampagne",
+        start: document.getElementById("campaignStart").value,
+        end: document.getElementById("campaignEnd").value,
+        budget: document.getElementById("campaignBudget").value,
+        color: document.getElementById("campaignColor").value,
+        goal: document.getElementById("campaignGoal").value
+      });
+      state.campaigns = old ? state.campaigns.map((item) => item.id === old.id ? campaign : item) : [campaign, ...state.campaigns];
+      closeModal(els.campaignModal);
+      toast("Kampagne gespeichert.");
+      renderAll();
+    }
+
+    function deleteCurrentCampaign() {
+      const idValue = document.getElementById("campaignId").value;
+      if (!idValue || !confirm("Kampagne loeschen? Posts bleiben erhalten und verlieren nur die Zuordnung.")) return;
+      state.campaigns = state.campaigns.filter((campaign) => campaign.id !== idValue);
+      state.posts.forEach((post) => { if (post.campaignId === idValue) post.campaignId = ""; });
+      closeModal(els.campaignModal);
+      toast("Kampagne geloescht.");
+      renderAll();
+    }
+
+    function openIdeaModal(idea = {}) {
+      const data = normalizeIdea(idea);
+      document.getElementById("ideaId").value = idea.id || "";
+      document.getElementById("ideaTitle").value = idea.id ? data.title : "";
+      document.getElementById("ideaType").value = data.type;
+      document.getElementById("ideaOwner").value = data.owner;
+      document.getElementById("ideaNotes").value = data.notes;
+      document.getElementById("deleteIdeaBtn").classList.toggle("hidden", !idea.id);
+      document.getElementById("promoteIdeaBtn").classList.toggle("hidden", !idea.id);
+      els.ideaModal.classList.add("open");
+    }
+
+    function saveIdea() {
+      const old = state.ideas.find((idea) => idea.id === document.getElementById("ideaId").value);
+      const idea = normalizeIdea({
+        id: old?.id || id(),
+        title: document.getElementById("ideaTitle").value.trim() || "Neue Idee",
+        type: document.getElementById("ideaType").value,
+        owner: document.getElementById("ideaOwner").value.trim(),
+        notes: document.getElementById("ideaNotes").value,
+        createdAt: old?.createdAt || now()
+      });
+      state.ideas = old ? state.ideas.map((item) => item.id === old.id ? idea : item) : [idea, ...state.ideas];
+      closeModal(els.ideaModal);
+      toast("Idee gespeichert.");
+      renderAll();
+    }
+
+    function deleteCurrentIdea() {
+      const idValue = document.getElementById("ideaId").value;
+      if (!idValue || !confirm("Idee loeschen?")) return;
+      state.ideas = state.ideas.filter((idea) => idea.id !== idValue);
+      closeModal(els.ideaModal);
+      toast("Idee geloescht.");
+      renderAll();
+    }
+
+    function promoteIdea() {
+      const idea = state.ideas.find((item) => item.id === document.getElementById("ideaId").value);
+      if (!idea) return;
+      const post = normalizePost({
+        title: idea.title,
+        caption: idea.notes,
+        type: idea.type,
+        owner: idea.owner,
+        date: isoDate(new Date()),
+        time: "09:00",
+        status: "Idee",
+        versions: [{ at: now(), label: "Aus Backlog-Idee erstellt" }]
+      });
+      state.posts.unshift(post);
+      state.ideas = state.ideas.filter((item) => item.id !== idea.id);
+      closeModal(els.ideaModal);
+      toast("Idee in Post umgewandelt.");
+      renderAll();
+    }
+
+    function openEmployeeModal(employee = {}) {
+      const data = employee.id ? normalizeEmployee(employee) : { id: "", name: "", role: "", email: "" };
+      document.getElementById("employeeId").value = employee.id || "";
+      document.getElementById("employeeName").value = data.name;
+      document.getElementById("employeeRole").value = data.role;
+      document.getElementById("employeeEmail").value = data.email;
+      document.getElementById("deleteEmployeeBtn").classList.toggle("hidden", !employee.id);
+      els.employeeModal.classList.add("open");
+    }
+
+    function saveEmployee() {
+      const old = state.employees.find((employee) => employee.id === document.getElementById("employeeId").value);
+      const employee = normalizeEmployee({
+        id: old?.id || id(),
+        name: document.getElementById("employeeName").value,
+        role: document.getElementById("employeeRole").value,
+        email: document.getElementById("employeeEmail").value
+      });
+      if (!employee) {
+        toast("Bitte einen Namen fuer den Mitarbeiter eintragen.");
+        return;
+      }
+
+      const duplicate = state.employees.find((item) => item.name.toLowerCase() === employee.name.toLowerCase() && item.id !== employee.id);
+      if (duplicate) {
+        toast("Dieser Mitarbeitername existiert bereits.");
+        return;
+      }
+
+      if (old && old.name !== employee.name) {
+        state.posts.forEach((post) => { if (post.owner === old.name) post.owner = employee.name; });
+        state.ideas.forEach((idea) => { if (idea.owner === old.name) idea.owner = employee.name; });
+      }
+
+      state.employees = old ? state.employees.map((item) => item.id === old.id ? employee : item) : [employee, ...state.employees];
+      closeModal(els.employeeModal);
+      toast("Mitarbeiter gespeichert.");
+      renderAll();
+    }
+
+    function deleteCurrentEmployee() {
+      const employee = state.employees.find((item) => item.id === document.getElementById("employeeId").value);
+      if (!employee) return;
+      if (!confirm(`Mitarbeiter "${employee.name}" loeschen? Bestehende Posts werden auf "Nicht zugewiesen" gesetzt.`)) return;
+      state.employees = state.employees.filter((item) => item.id !== employee.id);
+      state.posts.forEach((post) => { if (post.owner === employee.name) post.owner = ""; });
+      state.ideas.forEach((idea) => { if (idea.owner === employee.name) idea.owner = ""; });
+      closeModal(els.employeeModal);
+      toast("Mitarbeiter geloescht.");
+      renderAll();
+    }
+
+    function resetFilters() {
+      ["searchInput", "platformFilter", "campaignFilter", "statusFilter", "ownerFilter", "typeFilter"].forEach((id) => els[id].value = "");
+      renderAll();
+    }
+
+    function exportJson() {
+      downloadFile("content-calendar.json", JSON.stringify({ version: 1, exportedAt: now(), ...state }, null, 2), "application/json");
+      toast("JSON exportiert.");
+    }
+
+    function importJson(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || ""));
+          const imported = normalizeState(parsed);
+          if (!confirm("Importierte Daten ersetzen den aktuellen lokalen Kalender. Fortfahren?")) return;
+          state = imported;
+          saveState();
+          toast("Projekt importiert.");
+          renderAll();
+        } catch (error) {
+          toast(`Import fehlgeschlagen: ${error.message}`);
+        }
+      };
+      reader.onerror = () => toast("Datei konnte nicht gelesen werden.");
+      reader.readAsText(file);
+    }
+
+    function closeModal(modal) {
+      modal.classList.remove("open");
+    }
+
+    function toggleTheme() {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(THEME_KEY, next);
+    }
+
+    function postColor(post) {
+      const campaign = state.campaigns.find((item) => item.id === post.campaignId);
+      return campaign?.color || platformColors[post.platform] || "#2563eb";
+    }
+
+    function campaignProgress(campaign) {
+      const start = parseDate(campaign.start).getTime();
+      const end = parseDate(campaign.end).getTime();
+      const today = startOfDay(new Date()).getTime();
+      if (end <= start) return today >= end ? 100 : 0;
+      return Math.max(0, Math.min(100, Math.round((today - start) / (end - start) * 100)));
+    }
+
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function toast(message) {
+      const item = document.createElement("div");
+      item.className = "toast-message";
+      item.textContent = message;
+      els.toast.appendChild(item);
+      setTimeout(() => item.remove(), 3200);
+    }
+
+    function id() {
+      if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+      return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function now() { return new Date().toISOString(); }
+    function parseDate(value) {
+      const [year, month, day] = String(value).split("-").map(Number);
+      return new Date(year, (month || 1) - 1, day || 1);
+    }
+    function isoDate(date) {
+      const d = new Date(date);
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().slice(0, 10);
+    }
+    function startOfDay(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    function startOfMonth(date) { return new Date(date.getFullYear(), date.getMonth(), 1); }
+    function startOfWeek(date) {
+      const d = startOfDay(date);
+      const day = d.getDay() || 7;
+      d.setDate(d.getDate() - day + 1);
+      return d;
+    }
+    function addDays(date, days) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+    function between(value, start, end) {
+      const date = parseDate(value).getTime();
+      return date >= startOfDay(start).getTime() && date <= startOfDay(end).getTime();
+    }
+    function formatDate(date) { return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }); }
+    function formatBytes(bytes) {
+      if (!bytes) return "0 B";
+      const units = ["B", "KB", "MB", "GB"];
+      const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+      return `${(bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0)} ${units[index]}`;
+    }
+    function clean(value) { return String(value || "").toLowerCase().trim(); }
+    function unique(values) { return [...new Set(values)].sort((a, b) => a.localeCompare(b)); }
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

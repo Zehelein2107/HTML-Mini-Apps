@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UTM Studio - Marketing Parameter Manager</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-soft: #f2f4f7;
+      --panel-strong: #e9edf2;
+      --text: #101828;
+      --muted: #667085;
+      --faint: #98a2b3;
+      --line: #d9dee7;
+      --primary: #2563eb;
+      --primary-strong: #1d4ed8;
+      --primary-soft: #e8f0ff;
+      --green: #16803c;
+      --green-soft: #e8f7ee;
+      --amber: #b75d00;
+      --amber-soft: #fff3df;
+      --red: #c83232;
+      --red-soft: #fff0f0;
+      --shadow: 0 18px 45px rgba(16, 24, 40, 0.08);
+      --radius: 8px;
+      --speed: 180ms ease;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: #181b22;
+      --panel-soft: #20242d;
+      --panel-strong: #2a303b;
+      --text: #f4f7fb;
+      --muted: #aab4c3;
+      --faint: #7e8898;
+      --line: #313744;
+      --primary: #6aa2ff;
+      --primary-strong: #9dc0ff;
+      --primary-soft: #1f2f4d;
+      --green: #70d899;
+      --green-soft: #163323;
+      --amber: #ffbd68;
+      --amber-soft: #382718;
+      --red: #ff8b8b;
+      --red-soft: #3b2023;
+      --shadow: 0 22px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app {
+      width: min(1440px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 42px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 0;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #0f766e);
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.24);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.08rem;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .button {
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      transition: transform var(--speed), border-color var(--speed), background var(--speed), color var(--speed);
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--primary) 45%, var(--line));
+    }
+
+    .button.primary {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    [data-theme="dark"] .button.primary { color: #0a1020; }
+
+    .button.ghost { background: transparent; }
+
+    .button.danger {
+      color: var(--red);
+      background: var(--red-soft);
+      border-color: color-mix(in srgb, var(--red) 25%, var(--line));
+    }
+
+    .button.donate {
+      color: #ffffff;
+      background: #0070ba;
+      border-color: #0070ba;
+    }
+
+    .button.donate:hover {
+      background: #005ea6;
+      border-color: #005ea6;
+    }
+
+    .icon-button {
+      width: 38px;
+      padding: 0;
+      flex: 0 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel-soft) 68%, transparent);
+    }
+
+    .panel-header h2,
+    .panel-header h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    .panel-header p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .panel-body { padding: 18px; }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      min-height: 88px;
+      padding: 14px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 26px rgba(16, 24, 40, 0.04);
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 9px;
+      font-size: 1.5rem;
+      letter-spacing: 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      border-radius: 8px;
+    }
+
+    .tab {
+      min-height: 34px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: var(--text);
+      background: var(--panel);
+      box-shadow: 0 6px 16px rgba(16, 24, 40, 0.08);
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .required::after {
+      content: " *";
+      color: var(--red);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 10px 11px;
+      outline: none;
+      transition: border-color var(--speed), box-shadow var(--speed), background var(--speed);
+    }
+
+    textarea {
+      min-height: 118px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent);
+    }
+
+    .inline-grid {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.8fr) minmax(160px, 1fr) auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .custom-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .custom-row {
+      display: grid;
+      grid-template-columns: minmax(100px, 0.75fr) minmax(130px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .preview {
+      display: grid;
+      gap: 12px;
+      position: sticky;
+      top: 82px;
+    }
+
+    .url-box {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .url-output {
+      min-height: 96px;
+      overflow-wrap: anywhere;
+      padding: 12px;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      line-height: 1.5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.86rem;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .warning-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .notice {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      padding: 10px 11px;
+      border-radius: 8px;
+      color: var(--amber);
+      background: var(--amber-soft);
+      border: 1px solid color-mix(in srgb, var(--amber) 22%, var(--line));
+      font-size: 0.86rem;
+      line-height: 1.4;
+    }
+
+    .notice.error {
+      color: var(--red);
+      background: var(--red-soft);
+      border-color: color-mix(in srgb, var(--red) 22%, var(--line));
+    }
+
+    .notice.ok {
+      color: var(--green);
+      background: var(--green-soft);
+      border-color: color-mix(in srgb, var(--green) 22%, var(--line));
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: 1fr 160px 170px;
+      gap: 8px;
+      flex: 1;
+      min-width: min(100%, 520px);
+    }
+
+    .template-list {
+      display: grid;
+      gap: 10px;
+      max-height: 610px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .template-card {
+      display: grid;
+      gap: 10px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      transition: border-color var(--speed), transform var(--speed), background var(--speed);
+    }
+
+    .template-card:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+    }
+
+    .template-top {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .template-title {
+      min-width: 0;
+    }
+
+    .template-title strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .template-title span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .template-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      max-width: 100%;
+      padding: 4px 7px;
+      border-radius: 7px;
+      color: var(--muted);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      font-size: 0.76rem;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .preset {
+      min-height: 44px;
+      border-radius: 8px;
+      color: var(--text);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      font-weight: 800;
+      transition: transform var(--speed), border-color var(--speed), background var(--speed);
+    }
+
+    .preset:hover {
+      transform: translateY(-1px);
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .history-list,
+    .bulk-output {
+      display: grid;
+      gap: 8px;
+      max-height: 340px;
+      overflow: auto;
+    }
+
+    .history-item,
+    .bulk-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+    }
+
+    .history-item code,
+    .bulk-item code {
+      overflow-wrap: anywhere;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.48);
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal {
+      width: min(680px, 100%);
+      max-height: min(760px, calc(100vh - 36px));
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: liftIn 180ms ease both;
+    }
+
+    @keyframes liftIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 120;
+      display: grid;
+      gap: 8px;
+      width: min(380px, calc(100vw - 36px));
+      pointer-events: none;
+    }
+
+    .toast-message {
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      animation: liftIn 180ms ease both;
+      font-size: 0.9rem;
+    }
+
+    .hidden { display: none !important; }
+
+    .empty {
+      padding: 22px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview {
+        position: static;
+      }
+
+      .dashboard,
+      .preset-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        width: min(100% - 20px, 1440px);
+        padding-top: 8px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        justify-content: stretch;
+      }
+
+      .top-actions .button {
+        flex: 1;
+      }
+
+      .form-grid,
+      .inline-grid,
+      .custom-row,
+      .filters,
+      .history-item,
+      .bulk-item {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard,
+      .preset-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header {
+        flex-direction: column;
+      }
+
+      .tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .tab {
+        flex: 1;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M4 6.5h9.5M4 12h16M4 17.5h6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M17 4.5l3 3-3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>UTM Studio</h1>
+          <p>Standardisierte Kampagnenlinks fuer Marketing-Teams</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="button" id="importBtn" type="button">Import</button>
+        <button class="button" id="exportBtn" type="button">Export</button>
+        <a class="button donate" href="https://www.paypal.com/donate/?hosted_button_id=YC3JVKB9YAW4U" target="_blank" rel="noopener noreferrer">Spenden</a>
+        <button class="button icon-button" id="themeBtn" type="button" title="Dark Mode umschalten" aria-label="Dark Mode umschalten">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 13.2A7.8 7.8 0 1 1 10.8 3a6.2 6.2 0 0 0 10.2 10.2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="dashboard" aria-label="Dashboard">
+      <div class="metric"><span>Vorlagen</span><strong id="metricTemplates">0</strong></div>
+      <div class="metric"><span>Generiert</span><strong id="metricHistory">0</strong></div>
+      <div class="metric"><span>Plattformen</span><strong id="metricPlatforms">0</strong></div>
+      <div class="metric"><span>Aktueller Score</span><strong id="metricScore">0%</strong></div>
+    </section>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Generator</h2>
+            <p>Alle Werte werden normalisiert: lowercase, Bindestriche statt Leerzeichen, Sonderzeichen entfernt.</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="Arbeitsbereiche">
+            <button class="tab active" data-view="generatorView" type="button">Generator</button>
+            <button class="tab" data-view="templatesView" type="button">Vorlagen</button>
+            <button class="tab" data-view="bulkView" type="button">Bulk</button>
+            <button class="tab" data-view="historyView" type="button">History</button>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <section class="view active" id="generatorView">
+            <div class="preset-grid" aria-label="Presets">
+              <button class="preset" data-preset="google" type="button">Google Ads</button>
+              <button class="preset" data-preset="meta" type="button">Meta Ads</button>
+              <button class="preset" data-preset="linkedin" type="button">LinkedIn Ads</button>
+              <button class="preset" data-preset="newsletter" type="button">Newsletter</button>
+              <button class="preset" data-preset="influencer" type="button">Influencer</button>
+            </div>
+
+            <form id="utmForm" class="form-grid" autocomplete="off">
+              <div class="field full">
+                <label class="required" for="targetUrl">Ziel-URL</label>
+                <input id="targetUrl" name="targetUrl" type="url" placeholder="https://example.com/landingpage" />
+              </div>
+
+              <div class="field">
+                <label class="required" for="utmSource">utm_source</label>
+                <input id="utmSource" name="utm_source" list="sourceOptions" placeholder="google" />
+              </div>
+              <div class="field">
+                <label class="required" for="utmMedium">utm_medium</label>
+                <input id="utmMedium" name="utm_medium" list="mediumOptions" placeholder="cpc" />
+              </div>
+              <div class="field">
+                <label class="required" for="utmCampaign">utm_campaign</label>
+                <input id="utmCampaign" name="utm_campaign" list="campaignOptions" maxlength="90" placeholder="spring-sale-2026" />
+              </div>
+              <div class="field">
+                <label for="utmContent">utm_content</label>
+                <input id="utmContent" name="utm_content" placeholder="hero-button-a" />
+              </div>
+              <div class="field">
+                <label for="utmTerm">utm_term</label>
+                <input id="utmTerm" name="utm_term" placeholder="brand-keyword" />
+              </div>
+              <div class="field">
+                <label for="campaignType">Kampagnen-Typ</label>
+                <select id="campaignType" name="campaign_type">
+                  <option value="">Auswaehlen</option>
+                  <option>always-on</option>
+                  <option>launch</option>
+                  <option>seasonal</option>
+                  <option>retargeting</option>
+                  <option>lead-gen</option>
+                  <option>brand</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="platform">Plattform</label>
+                <select id="platform" name="platform">
+                  <option value="">Auswaehlen</option>
+                  <option>google-ads</option>
+                  <option>meta-ads</option>
+                  <option>linkedin-ads</option>
+                  <option>newsletter</option>
+                  <option>tiktok</option>
+                  <option>influencer</option>
+                  <option>affiliate</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="region">Land/Region</label>
+                <select id="region" name="region">
+                  <option value="">Auswaehlen</option>
+                  <option>de</option>
+                  <option>at</option>
+                  <option>ch</option>
+                  <option>dach</option>
+                  <option>eu</option>
+                  <option>us</option>
+                  <option>global</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="funnelStage">Funnel-Stufe</label>
+                <select id="funnelStage" name="funnel_stage">
+                  <option value="">Auswaehlen</option>
+                  <option>awareness</option>
+                  <option>consideration</option>
+                  <option>conversion</option>
+                  <option>retention</option>
+                  <option>referral</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="device">Device</label>
+                <select id="device" name="device">
+                  <option value="">Auswaehlen</option>
+                  <option>all</option>
+                  <option>desktop</option>
+                  <option>mobile</option>
+                  <option>tablet</option>
+                </select>
+              </div>
+
+              <div class="field full">
+                <label>Custom Parameter</label>
+                <div class="inline-grid">
+                  <input id="customKey" placeholder="parameter_key" aria-label="Custom Parameter Key" />
+                  <input id="customValue" placeholder="parameter-value" aria-label="Custom Parameter Value" />
+                  <button class="button" id="addCustomBtn" type="button">Hinzufuegen</button>
+                </div>
+                <div class="custom-list" id="customList"></div>
+              </div>
+            </form>
+          </section>
+
+          <section class="view" id="templatesView">
+            <div class="toolbar">
+              <div class="filters">
+                <input id="templateSearch" type="search" placeholder="Vorlagen suchen" />
+                <select id="filterPlatform">
+                  <option value="">Alle Plattformen</option>
+                </select>
+                <select id="filterType">
+                  <option value="">Alle Typen</option>
+                </select>
+              </div>
+              <button class="button primary" id="newTemplateBtn" type="button">Neue Vorlage</button>
+            </div>
+            <div class="template-list" id="templateList"></div>
+          </section>
+
+          <section class="view" id="bulkView">
+            <div class="form-grid">
+              <div class="field full">
+                <label for="bulkUrls">Ziel-URLs, eine pro Zeile</label>
+                <textarea id="bulkUrls" placeholder="https://example.com/page-a&#10;https://example.com/page-b"></textarea>
+              </div>
+              <div class="field full">
+                <label for="bulkTemplate">Vorlage fuer Bulk-Generierung</label>
+                <select id="bulkTemplate"></select>
+              </div>
+            </div>
+            <div class="toolbar" style="margin-top: 12px;">
+              <button class="button primary" id="generateBulkBtn" type="button">Bulk-URLs erzeugen</button>
+              <button class="button" id="copyBulkBtn" type="button">Alle kopieren</button>
+            </div>
+            <div class="bulk-output" id="bulkOutput"></div>
+          </section>
+
+          <section class="view" id="historyView">
+            <div class="toolbar">
+              <button class="button danger" id="clearHistoryBtn" type="button">History leeren</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="preview">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Live-Vorschau</h3>
+              <p>Fertige URL inklusive korrekt encodierter Parameter.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="url-box">
+              <div class="url-output" id="finalUrl">Noch keine gueltige URL.</div>
+              <div class="toolbar" style="margin: 0;">
+                <button class="button primary" id="copyUrlBtn" type="button">URL kopieren</button>
+                <button class="button" id="saveTemplateBtn" type="button">Als Vorlage speichern</button>
+                <button class="button" id="openUrlBtn" type="button">Oeffnen</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Qualitaetscheck</h3>
+              <p>Pflichtfelder, Schreibweisen, Dopplungen und URL-Laenge.</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="warning-list" id="warningList"></div>
+          </div>
+        </section>
+
+      </aside>
+    </main>
+  </div>
+
+  <datalist id="sourceOptions">
+    <option value="google"></option>
+    <option value="meta"></option>
+    <option value="linkedin"></option>
+    <option value="newsletter"></option>
+    <option value="tiktok"></option>
+    <option value="youtube"></option>
+    <option value="influencer"></option>
+    <option value="partner"></option>
+  </datalist>
+  <datalist id="mediumOptions">
+    <option value="cpc"></option>
+    <option value="paid-social"></option>
+    <option value="email"></option>
+    <option value="organic-social"></option>
+    <option value="display"></option>
+    <option value="affiliate"></option>
+    <option value="referral"></option>
+  </datalist>
+  <datalist id="campaignOptions"></datalist>
+
+  <input class="hidden" id="importFile" type="file" accept="application/json,.json" />
+
+  <div class="modal-backdrop" id="templateModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h3 id="modalTitle">Vorlage speichern</h3>
+          <p>Vorlagen enthalten alle Felder und Custom Parameter.</p>
+        </div>
+        <button class="button icon-button" id="closeModalBtn" type="button" aria-label="Schliessen">x</button>
+      </div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="field full">
+            <label class="required" for="templateName">Vorlagenname</label>
+            <input id="templateName" placeholder="Google Ads - Launch DACH" />
+          </div>
+          <div class="field full">
+            <label for="templateNote">Notiz</label>
+            <textarea id="templateNote" placeholder="Optionaler Kontext fuer das Team"></textarea>
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top: 14px; margin-bottom: 0;">
+          <button class="button primary" id="confirmTemplateBtn" type="button">Speichern</button>
+          <button class="button" id="cancelTemplateBtn" type="button">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="modal">
+      <div class="panel-header">
+        <div>
+          <h3 id="importTitle">JSON importieren</h3>
+          <p>Importierte Vorlagen koennen bestehende Eintraege ergaenzen oder ueberschreiben.</p>
+        </div>
+        <button class="button icon-button" id="closeImportBtn" type="button" aria-label="Schliessen">x</button>
+      </div>
+      <div class="panel-body">
+        <div class="field">
+          <label for="importMode">Importmodus</label>
+          <select id="importMode">
+            <option value="merge">Ergaenzen</option>
+            <option value="overwrite">Bestehende mit gleicher ID ueberschreiben</option>
+          </select>
+        </div>
+        <div class="toolbar" style="margin-top: 14px; margin-bottom: 0;">
+          <button class="button primary" id="chooseImportFileBtn" type="button">JSON-Datei waehlen</button>
+          <button class="button" id="cancelImportBtn" type="button">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    "use strict";
+
+    /*
+      UTM Studio ist absichtlich dependency-free:
+      - localStorage fuer Team-Vorlagen, History und Theme
+      - URL und URLSearchParams fuer robustes Encoding
+    */
+
+    const STORAGE_KEY = "utm-studio-state-v1";
+    const THEME_KEY = "utm-studio-theme";
+    const MAX_HISTORY = 30;
+
+    const FIELD_IDS = {
+      targetUrl: "targetUrl",
+      utm_source: "utmSource",
+      utm_medium: "utmMedium",
+      utm_campaign: "utmCampaign",
+      utm_content: "utmContent",
+      utm_term: "utmTerm",
+      campaign_type: "campaignType",
+      platform: "platform",
+      region: "region",
+      funnel_stage: "funnelStage",
+      device: "device"
+    };
+
+    const REQUIRED_FIELDS = ["targetUrl", "utm_source", "utm_medium", "utm_campaign"];
+    const STANDARD_PARAMS = Object.keys(FIELD_IDS).filter((key) => key !== "targetUrl");
+
+    const presets = {
+      google: {
+        utm_source: "google",
+        utm_medium: "cpc",
+        platform: "google-ads",
+        campaign_type: "lead-gen",
+        device: "all"
+      },
+      meta: {
+        utm_source: "meta",
+        utm_medium: "paid-social",
+        platform: "meta-ads",
+        campaign_type: "retargeting",
+        device: "all"
+      },
+      linkedin: {
+        utm_source: "linkedin",
+        utm_medium: "paid-social",
+        platform: "linkedin-ads",
+        campaign_type: "lead-gen",
+        device: "desktop"
+      },
+      newsletter: {
+        utm_source: "newsletter",
+        utm_medium: "email",
+        platform: "newsletter",
+        campaign_type: "always-on",
+        device: "all"
+      },
+      influencer: {
+        utm_source: "influencer",
+        utm_medium: "referral",
+        platform: "influencer",
+        campaign_type: "brand",
+        device: "mobile"
+      }
+    };
+
+    const defaultTemplates = [
+      {
+        id: cryptoId(),
+        name: "Google Ads - Lead Gen DACH",
+        note: "Standard fuer Search-Kampagnen mit Performance-Fokus.",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        fields: {
+          targetUrl: "https://example.com/demo",
+          utm_source: "google",
+          utm_medium: "cpc",
+          utm_campaign: "lead-gen-dach",
+          utm_content: "search-ad",
+          utm_term: "",
+          campaign_type: "lead-gen",
+          platform: "google-ads",
+          region: "dach",
+          funnel_stage: "conversion",
+          device: "all"
+        },
+        custom: [{ key: "team", value: "marketing" }]
+      },
+      {
+        id: cryptoId(),
+        name: "Newsletter - Monatskampagne",
+        note: "Saubere Basis fuer CRM- und Newsletter-Links.",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        fields: {
+          targetUrl: "https://example.com/news",
+          utm_source: "newsletter",
+          utm_medium: "email",
+          utm_campaign: "monthly-newsletter",
+          utm_content: "main-cta",
+          utm_term: "",
+          campaign_type: "always-on",
+          platform: "newsletter",
+          region: "dach",
+          funnel_stage: "retention",
+          device: "all"
+        },
+        custom: []
+      }
+    ];
+
+    const state = loadState();
+    let currentCustom = [];
+    let editingTemplateId = null;
+    let bulkResults = [];
+
+    const els = {
+      app: document.getElementById("app"),
+      form: document.getElementById("utmForm"),
+      finalUrl: document.getElementById("finalUrl"),
+      warningList: document.getElementById("warningList"),
+      customKey: document.getElementById("customKey"),
+      customValue: document.getElementById("customValue"),
+      customList: document.getElementById("customList"),
+      templateList: document.getElementById("templateList"),
+      templateSearch: document.getElementById("templateSearch"),
+      filterPlatform: document.getElementById("filterPlatform"),
+      filterType: document.getElementById("filterType"),
+      campaignOptions: document.getElementById("campaignOptions"),
+      bulkTemplate: document.getElementById("bulkTemplate"),
+      bulkUrls: document.getElementById("bulkUrls"),
+      bulkOutput: document.getElementById("bulkOutput"),
+      historyList: document.getElementById("historyList"),
+      toast: document.getElementById("toast"),
+      importFile: document.getElementById("importFile"),
+      templateModal: document.getElementById("templateModal"),
+      templateName: document.getElementById("templateName"),
+      templateNote: document.getElementById("templateNote"),
+      importModal: document.getElementById("importModal"),
+      importMode: document.getElementById("importMode")
+    };
+
+    init();
+
+    function init() {
+      document.documentElement.dataset.theme = localStorage.getItem(THEME_KEY) || "light";
+      bindEvents();
+      renderAll();
+      updatePreview();
+    }
+
+    function bindEvents() {
+      els.form.addEventListener("input", updatePreview);
+      els.form.addEventListener("change", updatePreview);
+
+      Object.entries(FIELD_IDS).forEach(([fieldName, id]) => {
+        if (fieldName !== "targetUrl") {
+          document.getElementById(id).addEventListener("blur", (event) => {
+            event.target.value = sanitizeValue(event.target.value);
+            updatePreview();
+          });
+        }
+      });
+
+      document.querySelectorAll(".tab").forEach((button) => {
+        button.addEventListener("click", () => activateView(button.dataset.view));
+      });
+
+      document.querySelectorAll(".preset").forEach((button) => {
+        button.addEventListener("click", () => applyPreset(button.dataset.preset));
+      });
+
+      document.getElementById("addCustomBtn").addEventListener("click", addCustomParam);
+      document.getElementById("copyUrlBtn").addEventListener("click", copyFinalUrl);
+      document.getElementById("openUrlBtn").addEventListener("click", openFinalUrl);
+      document.getElementById("saveTemplateBtn").addEventListener("click", () => openTemplateModal());
+      document.getElementById("newTemplateBtn").addEventListener("click", () => openTemplateModal(true));
+      document.getElementById("confirmTemplateBtn").addEventListener("click", saveTemplateFromModal);
+      document.getElementById("cancelTemplateBtn").addEventListener("click", closeTemplateModal);
+      document.getElementById("closeModalBtn").addEventListener("click", closeTemplateModal);
+      document.getElementById("themeBtn").addEventListener("click", toggleTheme);
+      document.getElementById("exportBtn").addEventListener("click", exportJson);
+      document.getElementById("importBtn").addEventListener("click", () => els.importModal.classList.add("open"));
+      document.getElementById("chooseImportFileBtn").addEventListener("click", () => els.importFile.click());
+      document.getElementById("cancelImportBtn").addEventListener("click", closeImportModal);
+      document.getElementById("closeImportBtn").addEventListener("click", closeImportModal);
+      document.getElementById("generateBulkBtn").addEventListener("click", generateBulk);
+      document.getElementById("copyBulkBtn").addEventListener("click", copyBulk);
+      document.getElementById("clearHistoryBtn").addEventListener("click", clearHistory);
+
+      [els.templateSearch, els.filterPlatform, els.filterType].forEach((input) => {
+        input.addEventListener("input", renderTemplates);
+        input.addEventListener("change", renderTemplates);
+      });
+
+      els.importFile.addEventListener("change", handleImportFile);
+
+      [els.templateModal, els.importModal].forEach((modal) => {
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) modal.classList.remove("open");
+        });
+      });
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (!saved || !Array.isArray(saved.templates)) throw new Error("No saved state");
+        return {
+          templates: saved.templates.map(normalizeTemplate).filter(Boolean),
+          history: Array.isArray(saved.history) ? saved.history.slice(0, MAX_HISTORY) : []
+        };
+      } catch {
+        return { templates: defaultTemplates, history: [] };
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function collectFields() {
+      const fields = {};
+      Object.entries(FIELD_IDS).forEach(([name, id]) => {
+        const value = document.getElementById(id).value.trim();
+        fields[name] = name === "targetUrl" ? value : sanitizeValue(value);
+      });
+      return fields;
+    }
+
+    function fillForm(fields, custom = []) {
+      Object.entries(FIELD_IDS).forEach(([name, id]) => {
+        document.getElementById(id).value = fields?.[name] || "";
+      });
+      currentCustom = Array.isArray(custom) ? custom.map(normalizeCustom).filter(Boolean) : [];
+      renderCustomParams();
+      updatePreview();
+    }
+
+    function sanitizeValue(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/ä/g, "ae")
+        .replace(/ö/g, "oe")
+        .replace(/ü/g, "ue")
+        .replace(/ß/g, "ss")
+        .replace(/[^a-z0-9_\s-]/g, "")
+        .replace(/[\s_]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    function sanitizeKey(value) {
+      return sanitizeValue(value).replace(/-/g, "_");
+    }
+
+    function buildUrl(fields, customParams = currentCustom) {
+      if (!fields.targetUrl) return "";
+      let url;
+      try {
+        url = new URL(fields.targetUrl);
+      } catch {
+        return "";
+      }
+
+      STANDARD_PARAMS.forEach((key) => {
+        const value = sanitizeValue(fields[key]);
+        if (value) url.searchParams.set(key, value);
+      });
+
+      customParams.forEach((item) => {
+        const key = sanitizeKey(item.key);
+        const value = sanitizeValue(item.value);
+        if (key && value) url.searchParams.set(key, value);
+      });
+
+      return url.toString();
+    }
+
+    function updatePreview() {
+      const rawFields = readRawFields();
+      const fields = collectFields();
+      const finalUrl = buildUrl(fields);
+      const warnings = validate(rawFields, fields, finalUrl);
+
+      els.finalUrl.textContent = finalUrl || "Noch keine gueltige URL.";
+      renderWarnings(warnings);
+      updateMetrics(warnings);
+    }
+
+    function readRawFields() {
+      const raw = {};
+      Object.entries(FIELD_IDS).forEach(([name, id]) => {
+        raw[name] = document.getElementById(id).value.trim();
+      });
+      return raw;
+    }
+
+    function validate(rawFields, fields, finalUrl) {
+      const warnings = [];
+
+      REQUIRED_FIELDS.forEach((key) => {
+        if (!fields[key]) {
+          const label = key === "targetUrl" ? "Ziel-URL" : key;
+          warnings.push({ type: "error", text: `${label} fehlt.` });
+        }
+      });
+
+      if (rawFields.targetUrl && !isValidUrl(rawFields.targetUrl)) {
+        warnings.push({ type: "error", text: "Die Ziel-URL ist nicht gueltig. Bitte inklusive https:// angeben." });
+      }
+
+      Object.keys(fields).forEach((key) => {
+        if (key !== "targetUrl" && rawFields[key] && rawFields[key] !== fields[key]) {
+          warnings.push({ type: "warn", text: `${key} wird zu "${fields[key]}" normalisiert.` });
+        }
+      });
+
+      const keys = [...STANDARD_PARAMS, ...currentCustom.map((item) => sanitizeKey(item.key)).filter(Boolean)];
+      const duplicates = keys.filter((key, index) => keys.indexOf(key) !== index);
+      [...new Set(duplicates)].forEach((key) => {
+        warnings.push({ type: "error", text: `Parameter "${key}" kommt doppelt vor.` });
+      });
+
+      const campaignLength = fields.utm_campaign.length;
+      if (campaignLength > 60) {
+        warnings.push({ type: "warn", text: `utm_campaign ist mit ${campaignLength} Zeichen recht lang.` });
+      }
+
+      if (finalUrl && finalUrl.length > 1800) {
+        warnings.push({ type: "warn", text: `Die finale URL ist ${finalUrl.length} Zeichen lang. Fuer Ads und E-Mail besser kuerzen.` });
+      }
+
+      if (warnings.length === 0 && finalUrl) {
+        warnings.push({ type: "ok", text: "Alles sieht konsistent aus." });
+      }
+
+      return warnings;
+    }
+
+    function isValidUrl(value) {
+      try {
+        const url = new URL(value);
+        return ["http:", "https:"].includes(url.protocol);
+      } catch {
+        return false;
+      }
+    }
+
+    function renderWarnings(warnings) {
+      els.warningList.innerHTML = "";
+      warnings.forEach((warning) => {
+        const item = document.createElement("div");
+        item.className = `notice ${warning.type === "error" ? "error" : warning.type === "ok" ? "ok" : ""}`;
+        item.textContent = warning.text;
+        els.warningList.appendChild(item);
+      });
+    }
+
+    function updateMetrics(warnings = []) {
+      document.getElementById("metricTemplates").textContent = state.templates.length;
+      document.getElementById("metricHistory").textContent = state.history.length;
+      document.getElementById("metricPlatforms").textContent = new Set(state.templates.map((item) => item.fields.platform).filter(Boolean)).size;
+
+      const errors = warnings.filter((warning) => warning.type === "error").length;
+      const warns = warnings.filter((warning) => warning.type === "warn").length;
+      const score = Math.max(0, 100 - errors * 28 - warns * 10);
+      document.getElementById("metricScore").textContent = `${score}%`;
+    }
+
+    function addCustomParam() {
+      const key = sanitizeKey(els.customKey.value);
+      const value = sanitizeValue(els.customValue.value);
+      if (!key || !value) {
+        toast("Bitte Key und Value fuer den Custom Parameter eintragen.");
+        return;
+      }
+      currentCustom.push({ key, value });
+      els.customKey.value = "";
+      els.customValue.value = "";
+      renderCustomParams();
+      updatePreview();
+    }
+
+    function renderCustomParams() {
+      els.customList.innerHTML = "";
+      currentCustom.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "custom-row";
+        row.innerHTML = `
+          <input value="${escapeHtml(item.key)}" aria-label="Custom Key" data-custom-key="${index}">
+          <input value="${escapeHtml(item.value)}" aria-label="Custom Value" data-custom-value="${index}">
+          <button class="button danger" type="button" data-remove-custom="${index}">Entfernen</button>
+        `;
+        els.customList.appendChild(row);
+      });
+
+      els.customList.querySelectorAll("[data-remove-custom]").forEach((button) => {
+        button.addEventListener("click", () => {
+          currentCustom.splice(Number(button.dataset.removeCustom), 1);
+          renderCustomParams();
+          updatePreview();
+        });
+      });
+
+      els.customList.querySelectorAll("[data-custom-key]").forEach((input) => {
+        input.addEventListener("blur", () => {
+          currentCustom[Number(input.dataset.customKey)].key = sanitizeKey(input.value);
+          renderCustomParams();
+          updatePreview();
+        });
+      });
+
+      els.customList.querySelectorAll("[data-custom-value]").forEach((input) => {
+        input.addEventListener("blur", () => {
+          currentCustom[Number(input.dataset.customValue)].value = sanitizeValue(input.value);
+          renderCustomParams();
+          updatePreview();
+        });
+      });
+    }
+
+    function copyFinalUrl() {
+      const finalUrl = buildUrl(collectFields());
+      if (!finalUrl) {
+        toast("Es gibt noch keine gueltige URL zum Kopieren.");
+        return;
+      }
+      copyText(finalUrl);
+      addHistory(finalUrl);
+      toast("URL kopiert.");
+    }
+
+    function openFinalUrl() {
+      const finalUrl = buildUrl(collectFields());
+      if (!finalUrl) {
+        toast("Bitte zuerst eine gueltige URL erzeugen.");
+        return;
+      }
+      addHistory(finalUrl);
+      window.open(finalUrl, "_blank", "noopener,noreferrer");
+    }
+
+    function addHistory(url) {
+      state.history = [{ url, createdAt: new Date().toISOString() }, ...state.history.filter((item) => item.url !== url)].slice(0, MAX_HISTORY);
+      persist();
+      renderHistory();
+      updateMetrics();
+    }
+
+    function renderHistory() {
+      els.historyList.innerHTML = "";
+      if (state.history.length === 0) {
+        els.historyList.innerHTML = `<div class="empty">Noch keine generierten URLs.</div>`;
+        return;
+      }
+      state.history.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+        row.innerHTML = `<code>${escapeHtml(item.url)}</code><button class="button" type="button">Kopieren</button>`;
+        row.querySelector("button").addEventListener("click", () => {
+          copyText(item.url);
+          toast("History-URL kopiert.");
+        });
+        els.historyList.appendChild(row);
+      });
+    }
+
+    function clearHistory() {
+      if (!state.history.length) return;
+      if (!confirm("History wirklich leeren?")) return;
+      state.history = [];
+      persist();
+      renderHistory();
+      updateMetrics();
+      toast("History geleert.");
+    }
+
+    function openTemplateModal(blank = false, template = null) {
+      editingTemplateId = template?.id || null;
+      els.templateName.value = template?.name || "";
+      els.templateNote.value = template?.note || "";
+      document.getElementById("modalTitle").textContent = editingTemplateId ? "Vorlage bearbeiten" : "Vorlage speichern";
+
+      if (blank) {
+        fillForm({}, []);
+        editingTemplateId = null;
+      }
+
+      els.templateModal.classList.add("open");
+      setTimeout(() => els.templateName.focus(), 0);
+    }
+
+    function closeTemplateModal() {
+      els.templateModal.classList.remove("open");
+      editingTemplateId = null;
+    }
+
+    function saveTemplateFromModal() {
+      const name = els.templateName.value.trim();
+      if (!name) {
+        toast("Bitte einen Vorlagennamen vergeben.");
+        return;
+      }
+
+      const fields = collectFields();
+      const now = new Date().toISOString();
+      const existing = state.templates.find((item) => item.id === editingTemplateId);
+      const template = {
+        id: existing?.id || cryptoId(),
+        name,
+        note: els.templateNote.value.trim(),
+        createdAt: existing?.createdAt || now,
+        updatedAt: now,
+        fields,
+        custom: currentCustom.map(normalizeCustom).filter(Boolean)
+      };
+
+      if (existing) {
+        state.templates = state.templates.map((item) => item.id === existing.id ? template : item);
+      } else {
+        state.templates.unshift(template);
+      }
+
+      persist();
+      closeTemplateModal();
+      renderAll();
+      toast("Vorlage gespeichert.");
+    }
+
+    function renderTemplates() {
+      refreshFilterOptions();
+      refreshCampaignSuggestions();
+      refreshBulkTemplateOptions();
+      els.templateList.innerHTML = "";
+
+      const search = sanitizeValue(els.templateSearch.value);
+      const platform = els.filterPlatform.value;
+      const type = els.filterType.value;
+
+      const templates = state.templates.filter((template) => {
+        const haystack = sanitizeValue([template.name, template.note, ...Object.values(template.fields || {})].join(" "));
+        return (!search || haystack.includes(search))
+          && (!platform || template.fields.platform === platform)
+          && (!type || template.fields.campaign_type === type);
+      });
+
+      if (templates.length === 0) {
+        els.templateList.innerHTML = `<div class="empty">Keine passenden Vorlagen gefunden.</div>`;
+        return;
+      }
+
+      templates.forEach((template) => {
+        const finalUrl = buildUrl(template.fields, template.custom);
+        const card = document.createElement("article");
+        card.className = "template-card";
+        card.innerHTML = `
+          <div class="template-top">
+            <div class="template-title">
+              <strong>${escapeHtml(template.name)}</strong>
+              <span>${escapeHtml(template.note || "Keine Notiz")}</span>
+            </div>
+            <div class="template-actions">
+              <button class="button" type="button" data-use="${escapeHtml(template.id)}">Nutzen</button>
+              <button class="button" type="button" data-copy="${escapeHtml(template.id)}">Kopieren</button>
+            </div>
+          </div>
+          <div class="chips">
+            ${chip(template.fields.platform || "ohne-plattform")}
+            ${chip(template.fields.campaign_type || "ohne-typ")}
+            ${chip(template.fields.region || "ohne-region")}
+            ${chip(template.fields.utm_campaign || "ohne-kampagne")}
+          </div>
+          <div class="template-actions">
+            <button class="button" type="button" data-edit="${escapeHtml(template.id)}">Bearbeiten</button>
+            <button class="button" type="button" data-duplicate="${escapeHtml(template.id)}">Duplizieren</button>
+            <button class="button danger" type="button" data-delete="${escapeHtml(template.id)}">Loeschen</button>
+          </div>
+        `;
+
+        card.querySelector("[data-use]").addEventListener("click", () => {
+          fillForm(template.fields, template.custom);
+          activateView("generatorView");
+          toast("Vorlage geladen.");
+        });
+        card.querySelector("[data-copy]").addEventListener("click", () => {
+          if (!finalUrl) {
+            toast("Diese Vorlage hat keine gueltige Ziel-URL.");
+            return;
+          }
+          copyText(finalUrl);
+          addHistory(finalUrl);
+          toast("Vorlagen-URL kopiert.");
+        });
+        card.querySelector("[data-edit]").addEventListener("click", () => {
+          fillForm(template.fields, template.custom);
+          openTemplateModal(false, template);
+        });
+        card.querySelector("[data-duplicate]").addEventListener("click", () => duplicateTemplate(template.id));
+        card.querySelector("[data-delete]").addEventListener("click", () => deleteTemplate(template.id));
+        els.templateList.appendChild(card);
+      });
+    }
+
+    function chip(text) {
+      return `<span class="chip">${escapeHtml(text)}</span>`;
+    }
+
+    function duplicateTemplate(id) {
+      const source = state.templates.find((template) => template.id === id);
+      if (!source) return;
+      const now = new Date().toISOString();
+      state.templates.unshift({
+        ...JSON.parse(JSON.stringify(source)),
+        id: cryptoId(),
+        name: `${source.name} Kopie`,
+        createdAt: now,
+        updatedAt: now
+      });
+      persist();
+      renderAll();
+      toast("Vorlage dupliziert.");
+    }
+
+    function deleteTemplate(id) {
+      const template = state.templates.find((item) => item.id === id);
+      if (!template) return;
+      if (!confirm(`Vorlage "${template.name}" loeschen?`)) return;
+      state.templates = state.templates.filter((item) => item.id !== id);
+      persist();
+      renderAll();
+      toast("Vorlage geloescht.");
+    }
+
+    function refreshFilterOptions() {
+      const currentPlatform = els.filterPlatform.value;
+      const currentType = els.filterType.value;
+      const platforms = uniqueSorted(state.templates.map((item) => item.fields.platform).filter(Boolean));
+      const types = uniqueSorted(state.templates.map((item) => item.fields.campaign_type).filter(Boolean));
+      els.filterPlatform.innerHTML = `<option value="">Alle Plattformen</option>${platforms.map((item) => `<option>${escapeHtml(item)}</option>`).join("")}`;
+      els.filterType.innerHTML = `<option value="">Alle Typen</option>${types.map((item) => `<option>${escapeHtml(item)}</option>`).join("")}`;
+      els.filterPlatform.value = platforms.includes(currentPlatform) ? currentPlatform : "";
+      els.filterType.value = types.includes(currentType) ? currentType : "";
+    }
+
+    function refreshCampaignSuggestions() {
+      const campaigns = uniqueSorted(state.templates.map((item) => item.fields.utm_campaign).filter(Boolean));
+      els.campaignOptions.innerHTML = campaigns.map((campaign) => `<option value="${escapeHtml(campaign)}"></option>`).join("");
+    }
+
+    function refreshBulkTemplateOptions() {
+      els.bulkTemplate.innerHTML = `<option value="">Aktuelle Generator-Werte nutzen</option>` + state.templates
+        .map((template) => `<option value="${template.id}">${escapeHtml(template.name)}</option>`)
+        .join("");
+    }
+
+    function applyPreset(key) {
+      const preset = presets[key];
+      if (!preset) return;
+      Object.entries(preset).forEach(([field, value]) => {
+        const id = FIELD_IDS[field];
+        if (id) document.getElementById(id).value = value;
+      });
+      updatePreview();
+      toast("Preset angewendet.");
+    }
+
+    function exportJson() {
+      const payload = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        templates: state.templates
+      };
+      downloadFile("utm-templates.json", JSON.stringify(payload, null, 2), "application/json");
+      toast("JSON exportiert.");
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || ""));
+          const incoming = Array.isArray(parsed) ? parsed : parsed.templates;
+          if (!Array.isArray(incoming)) throw new Error("Keine templates-Liste gefunden.");
+
+          const normalized = incoming.map(normalizeTemplate).filter(Boolean);
+          if (normalized.length === 0) throw new Error("Keine gueltigen Vorlagen gefunden.");
+
+          if (els.importMode.value === "overwrite") {
+            const byId = new Map(state.templates.map((template) => [template.id, template]));
+            normalized.forEach((template) => byId.set(template.id, template));
+            state.templates = [...byId.values()];
+          } else {
+            const existingIds = new Set(state.templates.map((template) => template.id));
+            const additions = normalized.map((template) => existingIds.has(template.id) ? { ...template, id: cryptoId() } : template);
+            state.templates = [...additions, ...state.templates];
+          }
+
+          persist();
+          closeImportModal();
+          renderAll();
+          toast(`${normalized.length} Vorlage(n) importiert.`);
+        } catch (error) {
+          toast(`Import fehlgeschlagen: ${error.message}`);
+        }
+      };
+      reader.onerror = () => toast("Datei konnte nicht gelesen werden.");
+      reader.readAsText(file);
+    }
+
+    function closeImportModal() {
+      els.importModal.classList.remove("open");
+    }
+
+    function normalizeTemplate(template) {
+      try {
+        const fields = {};
+        Object.keys(FIELD_IDS).forEach((key) => {
+          const value = template.fields?.[key] || "";
+          fields[key] = key === "targetUrl" ? String(value).trim() : sanitizeValue(value);
+        });
+        return {
+          id: String(template.id || cryptoId()),
+          name: String(template.name || fields.utm_campaign || "Unbenannte Vorlage").trim(),
+          note: String(template.note || "").trim(),
+          createdAt: template.createdAt || new Date().toISOString(),
+          updatedAt: template.updatedAt || new Date().toISOString(),
+          fields,
+          custom: Array.isArray(template.custom) ? template.custom.map(normalizeCustom).filter(Boolean) : []
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    function normalizeCustom(item) {
+      const key = sanitizeKey(item?.key);
+      const value = sanitizeValue(item?.value);
+      return key && value ? { key, value } : null;
+    }
+
+    function generateBulk() {
+      const selected = state.templates.find((template) => template.id === els.bulkTemplate.value);
+      const baseFields = selected ? selected.fields : collectFields();
+      const custom = selected ? selected.custom : currentCustom;
+      const urls = els.bulkUrls.value.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+
+      bulkResults = urls.map((targetUrl) => {
+        const fields = { ...baseFields, targetUrl };
+        return { input: targetUrl, url: buildUrl(fields, custom), valid: isValidUrl(targetUrl) };
+      });
+
+      renderBulk();
+      toast(`${bulkResults.filter((item) => item.url).length} Bulk-URL(s) erzeugt.`);
+    }
+
+    function renderBulk() {
+      els.bulkOutput.innerHTML = "";
+      if (bulkResults.length === 0) {
+        els.bulkOutput.innerHTML = `<div class="empty">Noch keine Bulk-URLs erzeugt.</div>`;
+        return;
+      }
+      bulkResults.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "bulk-item";
+        row.innerHTML = `<code>${escapeHtml(item.url || `Ungueltig: ${item.input}`)}</code><button class="button" type="button">Kopieren</button>`;
+        row.querySelector("button").disabled = !item.url;
+        row.querySelector("button").addEventListener("click", () => {
+          copyText(item.url);
+          addHistory(item.url);
+          toast("Bulk-URL kopiert.");
+        });
+        els.bulkOutput.appendChild(row);
+      });
+    }
+
+    function copyBulk() {
+      const text = bulkResults.map((item) => item.url).filter(Boolean).join("\n");
+      if (!text) {
+        toast("Keine Bulk-URLs zum Kopieren.");
+        return;
+      }
+      copyText(text);
+      toast("Alle Bulk-URLs kopiert.");
+    }
+
+    function activateView(id) {
+      document.querySelectorAll(".tab").forEach((button) => button.classList.toggle("active", button.dataset.view === id));
+      document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === id));
+      if (id === "templatesView") renderTemplates();
+      if (id === "historyView") renderHistory();
+      if (id === "bulkView") renderBulk();
+    }
+
+    function toggleTheme() {
+      const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(THEME_KEY, next);
+      toast(next === "dark" ? "Dark Mode aktiv." : "Light Mode aktiv.");
+    }
+
+    function renderAll() {
+      renderTemplates();
+      renderHistory();
+      renderBulk();
+      updateMetrics();
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    function downloadFile(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function uniqueSorted(values) {
+      return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+    }
+
+    function cryptoId() {
+      if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+      return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function toast(message) {
+      const item = document.createElement("div");
+      item.className = "toast-message";
+      item.textContent = message;
+      els.toast.appendChild(item);
+      setTimeout(() => item.remove(), 3200);
+    }
+
+  </script>
+</body>
+</html>
